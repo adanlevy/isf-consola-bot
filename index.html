@@ -24,11 +24,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tab.active{background:var(--bg-2);color:var(--text);border-color:var(--border-2);font-weight:500}
 .tab-n{display:block;font-size:16px;font-weight:500;color:var(--text);line-height:1.2}
 .donor-list{flex:1;overflow-y:auto}
-.donor-card{padding:11px 12px;border-bottom:0.5px solid var(--border);cursor:pointer}
+.donor-card{padding:10px 12px;border-bottom:0.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px}
 .donor-card:hover{background:var(--bg-2)}
 .donor-card.sel{background:var(--bg-2)}
-.dc-name{font-size:13px;font-weight:500;margin-bottom:3px}
-.dc-preview{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.donor-card.unread .dc-name{font-weight:600}
+.dc-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.dc-body{flex:1;min-width:0}
+.dc-top{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:2px}
+.dc-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-time{font-size:11px;color:var(--text-2);flex-shrink:0}
+.dc-time.unread-time{color:#27500A;font-weight:600}
+.dc-bottom{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.dc-preview{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.dc-badges{display:flex;gap:3px;align-items:center;flex-wrap:nowrap;flex-shrink:0}
+.unread-count{background:#27500A;color:#fff;border-radius:99px;font-size:10px;font-weight:600;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;margin:1px 2px 1px 0}
 .bh{background:#E6F1FB;color:#0C447C}.bn{background:#FCEBEB;color:#A32D2D}.bp{background:#EAF3DE;color:#27500A}.br{background:#FAEEDA;color:#633806}.bec{background:#F0EBF9;color:#5B21B6;border:0.5px solid #C4B5FD}
 .bot-on{background:#EAF3DE;color:#27500A;border:0.5px solid #97C459}
@@ -101,8 +110,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .setup-banner{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;margin:12px}
 .loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
 .error-msg{padding:14px;font-size:12px;color:#A32D2D}
-.donor-card.unread{background:color-mix(in srgb,#378ADD 8%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 14%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 16%,var(--bg))}
-.donor-card.unread{background:color-mix(in srgb,#378ADD 8%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 14%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 16%,var(--bg))}
+.donor-card.unread{background:color-mix(in srgb,#378ADD 6%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 12%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 14%,var(--bg))}
+.donor-card.unread{background:color-mix(in srgb,#378ADD 6%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 12%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 14%,var(--bg))}
 .notif-popup{position:fixed;top:60px;right:16px;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--rl);box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:14px 16px;width:300px;z-index:200;animation:slideIn 0.2s ease;cursor:pointer}
 .notif-popup:hover{background:var(--bg-2)}
 .notif-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -210,7 +219,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <script>
 const CK='isf_conv_v3';
-let donors=[],tab='derivado_humano',sel=null,unread=new Set();
+let donors=[],tab='derivado_humano',sel=null,unread=new Set(),unreadCount=new Map();
 
 function cfg(){try{return JSON.parse(localStorage.getItem(CK)||'{}')}catch(e){return {}}}
 function saveCfg(c){localStorage.setItem(CK,JSON.stringify(c))}
@@ -251,6 +260,17 @@ function updateTitle(){
 function nextMonthDate(){const d=new Date();d.setMonth(d.getMonth()+1,1);return d.toISOString().split('T')[0]}
 function humanDate(iso){if(!iso)return '—';const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('es-AR',{day:'numeric',month:'long'})}
 function initials(n){return n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2)}
+function fmtTime(iso){
+  if(!iso)return'';
+  const d=new Date(iso),now=new Date();
+  const diff=now-d;
+  const sameDay=d.toDateString()===now.toDateString();
+  const yesterday=new Date(now-86400000).toDateString()===d.toDateString();
+  if(sameDay)return d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  if(yesterday)return'Ayer';
+  if(diff<7*86400000)return d.toLocaleDateString('es-AR',{weekday:'short'}).replace('.','');
+  return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+}
 function avatarColor(n){const c=[['#CECBF6','#3C3489'],['#9FE1CB','#085041'],['#B5D4F4','#0C447C'],['#F5C4B3','#712B13'],['#C0DD97','#27500A']];return c[n.charCodeAt(0)%c.length]}
 function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
 function lastMsg(h){if(!h)return '';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return '';const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);return(m?m[1].trim():last).slice(0,60)}
@@ -371,7 +391,7 @@ async function loadAll(){
 
 function selectDonor(id){
   sel=donors.find(d=>d.id===id);if(!sel)return;
-  unread.delete(id);
+  unread.delete(id);unreadCount.delete(id);
   if(document.title.startsWith('(!)') && unread.size===0) document.title=document.title.replace('(!) ','');
   unread.delete(id);updateTitle();
   renderList();
@@ -600,6 +620,7 @@ async function handleNewMessage(donationId){
     } else {
       // Not active — mark unread and notify
       unread.add(donationId);
+      unreadCount.set(donationId,(unreadCount.get(donationId)||0)+1);
       showNotif(fresh);
     }
     updateCounts(donors);renderList();
