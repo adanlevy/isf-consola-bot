@@ -30,6 +30,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dc-preview{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;margin:1px 2px 1px 0}
 .bh{background:#E6F1FB;color:#0C447C}.bn{background:#FCEBEB;color:#A32D2D}.bp{background:#EAF3DE;color:#27500A}.br{background:#FAEEDA;color:#633806}
+.bot-active{background:#EAF3DE;color:#27500A;border:0.5px solid #97C459}
+.bot-inactive{background:#F5F5F3;color:#6b6b67;border:0.5px solid var(--border-2)}
+.bot-resume{background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27}
+.bot-human{background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB}
 .sidebar-info{border-top:0.5px solid var(--border);padding:10px 12px;flex-shrink:0;display:none}
 .ir{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
 .il{color:var(--text-2)}.iv{font-weight:500}
@@ -43,12 +47,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500;border:0.5px solid;white-space:nowrap}
 .ph{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.pp{background:#EAF3DE;color:#27500A;border-color:#97C459}.pn{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.pr{background:#FAEEDA;color:#633806;border-color:#EF9F27}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;font-size:11px;border-radius:var(--r);border:0.5px solid var(--border-2);background:transparent;color:var(--text);cursor:pointer;font-family:inherit}
-.btn:hover{background:var(--bg-2)}
-.btn-blue{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.btn-blue:hover{background:#B5D4F4}
-.btn-green{background:#EAF3DE;color:#27500A;border-color:#97C459}.btn-green:hover{background:#C0DD97}
-.btn-red{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.btn-red:hover{background:#F7C1C1}
-.btn-orange{background:#FAEEDA;color:#633806;border-color:#EF9F27}.btn-orange:hover{background:#F5D5A0}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;font-size:11px;font-weight:500;border-radius:var(--r);border:1px solid var(--border-2);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(0,0,0,0.06);transition:all 0.12s}
+.btn:hover{background:var(--bg-2);box-shadow:0 2px 4px rgba(0,0,0,0.1);transform:translateY(-1px)}
+.btn:active{transform:translateY(0);box-shadow:none}
+.btn-blue{background:#185FA5;color:#fff;border-color:#0C447C}.btn-blue:hover{background:#0C447C}
+.btn-green{background:#27500A;color:#fff;border-color:#1a3607}.btn-green:hover{background:#1a3607}
+.btn-red{background:#A32D2D;color:#fff;border-color:#7a1f1f}.btn-red:hover{background:#7a1f1f}
+.btn-orange{background:#633806;color:#fff;border-color:#4a2904}.btn-orange:hover{background:#4a2904}
 .chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:72%;display:flex;flex-direction:column}
 .m-bot{align-self:flex-start}.m-donor{align-self:flex-end}.m-human{align-self:flex-start}
@@ -229,6 +234,12 @@ function initials(n){return n.split(' ').map(x=>x[0]).join('').toUpperCase().sli
 function avatarColor(n){const c=[['#CECBF6','#3C3489'],['#9FE1CB','#085041'],['#B5D4F4','#0C447C'],['#F5C4B3','#712B13'],['#C0DD97','#27500A']];return c[n.charCodeAt(0)%c.length]}
 function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
 function lastMsg(h){if(!h)return '';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return '';const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);return(m?m[1].trim():last).slice(0,60)}
+function botStatusBadge(d){
+  if(d.estado==='derivado_humano') return['bot-human','ti-user-off','Bot inactivo — humano activo'];
+  if(d.liberar_en) return['bot-resume','ti-clock','Bot retoma '+humanDate(d.liberar_en)];
+  if(d.estado==='cerrado_negativo'||d.estado==='cerrado_positivo') return['bot-inactive','ti-robot-off','Bot suspendido'];
+  return['bot-active','ti-robot','Bot activo'];
+}
 function pillInfo(d){
   if(d.estado==='derivado_humano')return['ph','ti-user','Conversación con humano activa'];
   if(d.estado==='cerrado_positivo'){if(d.liberar_en)return['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];return['pp','ti-check','Cerrado positivo — verificar cobro']}
@@ -269,20 +280,23 @@ function updateCounts(d){
   document.getElementById('cnt-n').textContent=d.filter(x=>x.estado==='cerrado_negativo').length;
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
   const prEl=document.getElementById('cnt-pr');
-  if(prEl)prEl.textContent=d.filter(x=>x.liberar_en).length;
+  if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
 }
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderList()}
 function renderList(){
   const list=document.getElementById('donor-list');
-  const filtered=tab==='programadas'?donors.filter(d=>d.liberar_en):donors.filter(d=>d.estado===tab);
+  const filtered=tab==='programadas'?donors.filter(d=>d.liberar_en&&!d.estado):donors.filter(d=>d.estado===tab);
   if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';return}
   list.innerHTML=filtered.map(d=>{
     const[pc,pi,pt]=pillInfo(d);const isSel=sel&&sel.id===d.id;
+    const[bc,bi,bt]=botStatusBadge(d);
     return`<div class="donor-card${isSel?' sel':''}" onclick="selectDonor('${d.id}')">
       <div class="dc-name">${d.name}</div>
       <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
-      <span class="badge ${badgeClass(d.estado)}"><i class="ti ${pi}" style="font-size:9px"></i> ${pt}</span>
-      ${d.liberar_en&&d.estado!=='derivado_humano'?`<span class="badge br"><i class="ti ti-clock" style="font-size:9px"></i> ${humanDate(d.liberar_en)}</span>`:''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
+        <span class="badge ${badgeClass(d.estado)}"><i class="ti ${pi}" style="font-size:9px"></i> ${pt}</span>
+        <span class="badge ${bc}"><i class="ti ${bi}" style="font-size:9px"></i> ${bt}</span>
+      </div>
     </div>`;
   }).join('');
 }
@@ -390,7 +404,7 @@ function refreshActions(){const acts=document.getElementById('actions');if(acts)
 async function doTake(){
   if(!sel)return;const c=cfg();
   if(c.wt){try{await fetch(c.wt,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id})})}catch(e){}}
-  sel.estado='derivado_humano';donors=donors.map(d=>d.id===sel.id?sel:d);
+  sel.estado='derivado_humano';sel.liberar_en=null;donors=donors.map(d=>d.id===sel.id?sel:d);
   updateCounts(donors);updatePill();refreshActions();
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
