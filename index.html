@@ -101,7 +101,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .setup-banner{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;margin:12px}
 .loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
 .error-msg{padding:14px;font-size:12px;color:#A32D2D}
-.unread-dot{width:8px;height:8px;border-radius:50%;background:#E53E3E;flex-shrink:0;margin-left:auto}
+.donor-card.unread{background:color-mix(in srgb,#378ADD 8%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 14%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 16%,var(--bg))}
+.donor-card.unread{background:color-mix(in srgb,#378ADD 8%,var(--bg))}.donor-card.unread:hover{background:color-mix(in srgb,#378ADD 14%,var(--bg))}.donor-card.unread.sel{background:color-mix(in srgb,#378ADD 16%,var(--bg))}
+.notif-popup{position:fixed;top:60px;right:16px;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--rl);box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:14px 16px;width:300px;z-index:200;animation:slideIn 0.2s ease;cursor:pointer}
+.notif-popup:hover{background:var(--bg-2)}
+.notif-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.notif-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+.notif-preview{font-size:12px;color:var(--text-2);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-close{background:none;border:none;color:var(--text-2);cursor:pointer;font-size:16px;padding:0;line-height:1}
 .toast{position:fixed;top:60px;right:16px;background:var(--text);color:var(--bg);padding:10px 14px;border-radius:var(--r);font-size:12px;display:flex;align-items:center;gap:8px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.2s ease;max-width:280px}
 .toast-close{background:none;border:none;color:inherit;cursor:pointer;opacity:0.7;font-size:14px;padding:0;margin-left:4px}
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
@@ -315,15 +322,20 @@ function updateCounts(d){
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderList()}
 function renderList(){
   const list=document.getElementById('donor-list');
-  const filtered=tab==='programadas'?donors.filter(d=>d.liberar_en&&!d.estado):donors.filter(d=>d.estado===tab);
+  const filtered=(tab==='programadas'?donors.filter(d=>d.liberar_en&&!d.estado):donors.filter(d=>d.estado===tab))
+    .sort((a,b)=>{
+      // Unread always first
+      const au=unread.has(a.id)?1:0, bu=unread.has(b.id)?1:0;
+      if(au!==bu) return bu-au;
+      return 0;
+    });
   if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';return}
   list.innerHTML=filtered.map(d=>{
     const[pc,pi,pt]=pillInfo(d);const isSel=sel&&sel.id===d.id;
     const botBadgeData=botStatusBadge(d);
-    return`<div class="donor-card${isSel?' sel':''}" onclick="selectDonor('${d.id}')">
+    return`<div class="donor-card${isSel?' sel':''} ${unread.has(d.id)?'unread':''}" onclick="selectDonor('${d.id}')">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div class="dc-name">${d.name}</div>
-        ${unread.has(d.id)?'<span class="unread-dot"></span>':''}
       </div>
       <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
@@ -357,6 +369,8 @@ async function loadAll(){
 
 function selectDonor(id){
   sel=donors.find(d=>d.id===id);if(!sel)return;
+  unread.delete(id);
+  if(document.title.startsWith('(!)') && unread.size===0) document.title=document.title.replace('(!) ','');
   unread.delete(id);updateTitle();
   renderList();
   const si=document.getElementById('sidebar-info');si.style.display='block';
@@ -443,7 +457,7 @@ async function doTake(){
   if(!sel)return;const c=cfg();
   if(c.wt){try{await fetch(c.wt,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id})})}catch(e){}}
   sel.estado='derivado_humano';sel.liberar_en=null;donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(donors);updatePill();refreshActions();
+  updateCounts(donors);renderList();
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
   if(!isWindowExpired(sel.historial))getAiSuggestion(sel,msgs);
@@ -503,8 +517,9 @@ async function confirmLiberate(){
   if(!date){alert('Seleccioná una fecha');return}
   const c=cfg();
   if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:date})})}catch(e){}}
-  sel.liberar_en=date;donors=donors.map(d=>d.id===sel.id?sel:d);
-  closeLiberateModal();updatePill();renderList();
+  sel.liberar_en=date;sel.estado=sel.estado||null;donors=donors.map(d=>d.id===sel.id?sel:d);
+  closeLiberateModal();updateCounts(donors);renderList();
+  renderConv(sel,parseHist(sel.historial));
 }
 
 async function doResolve(res){
@@ -587,14 +602,34 @@ async function silentRefresh(){
   if(dot){dot.classList.remove('active')}
 }
 
-function showToast(name){
-  const c=document.getElementById('toast-container');if(!c)return;
-  const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<i class="ti ti-message" style="font-size:14px;flex-shrink:0"></i> Nuevo mensaje de <strong>${name}</strong><button class="toast-close" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;
-  c.appendChild(t);
-  setTimeout(()=>{if(t.parentElement)t.remove()},5000);
+function showNotif(donor){
+  // Mark as unread
+  unread.add(donor.id);
+  renderList();
   // Update title
-  if(!document.title.startsWith('(')) document.title='(!) '+document.title;
+  if(!document.title.startsWith('(!)')){document.title='(!) '+document.title;}
+  // Remove existing popup for same donor
+  const existing=document.getElementById('notif-'+donor.id);
+  if(existing)existing.remove();
+  const c=document.getElementById('toast-container');if(!c)return;
+  const preview=donor.ultimo_mensaje||'Nuevo mensaje';
+  const popup=document.createElement('div');
+  popup.className='notif-popup';popup.id='notif-'+donor.id;
+  popup.innerHTML=`
+    <div class="notif-header">
+      <div class="notif-name"><i class="ti ti-message-circle" style="font-size:14px;color:#378ADD"></i> ${donor.name}</div>
+      <button class="notif-close" onclick="event.stopPropagation();this.closest('.notif-popup').remove()">×</button>
+    </div>
+    <div class="notif-preview">${preview}</div>`;
+  popup.onclick=()=>{
+    // Switch to correct tab and select donor
+    const tabEl=document.querySelector(`.tab[onclick*="switchTab('${donor.estado||'derivado_humano'}"]`);
+    if(tabEl){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tabEl.classList.add('active');tab=donor.estado||'derivado_humano';}
+    renderList();selectDonor(donor.id);
+    popup.remove();
+  };
+  c.appendChild(popup);
+  setTimeout(()=>{if(popup.parentElement)popup.remove();},8000);
 }
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&document.title.startsWith('(!)')){
