@@ -196,6 +196,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="field"><label>Liberar episodio — wli</label><input type="text" id="cfg-wli" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Resolver — wr</label><input type="text" id="cfg-wr" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Sugerencia IA — wa</label><input type="text" id="cfg-wa" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Dar de baja — wb</label><input type="text" id="cfg-wb" placeholder="https://hook.make.com/..."></div>
       <div class="field-section">Tiempo real</div>
       <div class="field"><label>Pusher App Key</label><input type="text" id="cfg-pk" placeholder="tu Pusher App Key"></div>
     </div>
@@ -312,13 +313,13 @@ function saveCfg(c){localStorage.setItem(CK,JSON.stringify(c))}
 
 function openSettings(){
   const c=cfg();
-  ['op','wl','ws','wtr','wt','wli','wr','wa','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
   document.getElementById('overlay').classList.add('open');
 }
 function closeSettings(){document.getElementById('overlay').classList.remove('open')}
 function saveSettings(){
   const c={};
-  ['op','wl','ws','wtr','wt','wli','wr','wa','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
   saveCfg(c);closeSettings();loadAll();if(c.pk)initPusher();
 }
 function loadConfigFile(e){
@@ -327,7 +328,7 @@ function loadConfigFile(e){
   r.onload=ev=>{
     try{
       const c=JSON.parse(ev.target.result);
-      ['op','wl','ws','wtr','wt','wli','wr','wa','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
+      ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
       e.target.value='';
     }catch(err){alert('El archivo no es un JSON válido.');}
   };
