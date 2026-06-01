@@ -231,6 +231,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <label>Motivo de Baja <span style="color:#dc2626">*</span></label>
         <select id="baja-motivo" style="padding:8px 10px;font-size:13px;border:1px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);font-family:inherit;width:100%">
           <option value="">-- Seleccioná un motivo --</option>
+          <option value="Falta de respuesta y débitos rechazados">Falta de respuesta y débitos rechazados</option>
+          <option value="Problemas económicos">Problemas económicos</option>
+          <option value="Fuera del país">Fuera del país</option>
+          <option value="Falta de interés">Falta de interés</option>
+          <option value="Quería hacer un único aporte">Quería hacer un único aporte</option>
+          <option value="En respuesta a una comunicación nuestra">En respuesta a una comunicación nuestra</option>
+          <option value="Auto cese de donación">Auto cese de donación</option>
         </select>
       </div>
       <div class="field">
@@ -661,11 +668,6 @@ async function confirmBaja(){
     sel=null;updateCounts(donors);renderList();
     document.getElementById('conv').innerHTML='<div class="empty"><i class="ti ti-check" style="font-size:36px;color:var(--isf)"></i><span>Baja registrada en Salesforce</span></div>';
   }catch(e){alert('Error al procesar la baja.');}
-}
-function populateBajaMotivos(opciones){
-  const el=document.getElementById('baja-motivo');if(!el)return;
-  el.innerHTML='<option value="">-- Seleccioná un motivo --</option>';
-  opciones.forEach(o=>el.innerHTML+=`<option value="${o}">${o}</option>`);
 }
 function doLiberate(){
   if(!sel)return;
