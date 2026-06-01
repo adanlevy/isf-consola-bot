@@ -235,16 +235,16 @@ function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return 
 function lastMsg(h){if(!h)return '';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return '';const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);return(m?m[1].trim():last).slice(0,60)}
 function botStatusBadge(d){
   if(d.estado==='derivado_humano') return['bot-off','ti-robot-off','Maitena desactivada'];
-  if(d.liberar_en) return['bot-resume','ti-clock','Outbound retoma '+humanDate(d.liberar_en)];
   return['bot-on','ti-robot','Maitena activa'];
 }
 function pillInfo(d){
-  if(d.estado==='derivado_humano')return['ph','ti-user','Conversación con humano activa'];
-  if(d.estado==='cerrado_positivo'){if(d.liberar_en)return['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];return['pp','ti-check','Cerrado positivo — verificar cobro']}
-  if(d.liberar_en)return['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];
-  return['pn','ti-ban','Bot suspendido — sin reanudación'];
+  if(d.estado==='derivado_humano') return['ph','ti-user','Con humano'];
+  if(d.estado==='cerrado_positivo') return['pp','ti-check','Cerrado positivo'];
+  if(d.estado==='cerrado_negativo') return['pn','ti-x','Cerrado negativo'];
+  if(!d.estado&&d.liberar_en) return['pr','ti-calendar','Programada'];
+  return['ph','ti-circle','Activo'];
 }
-function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';return'bn'}
+function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';return'br'}
 function parseHist(s){
   if(!s)return[];
   return s.split('\n').filter(l=>l.trim()).map(l=>{
@@ -287,13 +287,14 @@ function renderList(){
   if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';return}
   list.innerHTML=filtered.map(d=>{
     const[pc,pi,pt]=pillInfo(d);const isSel=sel&&sel.id===d.id;
-    const[bc,bi,bt]=botStatusBadge(d);
+    const botBadgeData=botStatusBadge(d);
     return`<div class="donor-card${isSel?' sel':''}" onclick="selectDonor('${d.id}')">
       <div class="dc-name">${d.name}</div>
       <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
         <span class="badge ${badgeClass(d.estado)}"><i class="ti ${pi}" style="font-size:9px"></i> ${pt}</span>
-        <span class="badge ${bc}"><i class="ti ${bi}" style="font-size:9px"></i> ${bt}</span>
+        ${botBadgeData?`<span class="badge ${botBadgeData[0]}"><i class="ti ${botBadgeData[1]}" style="font-size:9px"></i> ${botBadgeData[2]}</span>`:''}
+        ${d.liberar_en?`<span class="badge bot-resume"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
       </div>
     </div>`;
   }).join('');
