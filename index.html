@@ -30,10 +30,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dc-preview{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;margin:1px 2px 1px 0}
 .bh{background:#E6F1FB;color:#0C447C}.bn{background:#FCEBEB;color:#A32D2D}.bp{background:#EAF3DE;color:#27500A}.br{background:#FAEEDA;color:#633806}
-.bot-active{background:#EAF3DE;color:#27500A;border:0.5px solid #97C459}
-.bot-inactive{background:#F5F5F3;color:#6b6b67;border:0.5px solid var(--border-2)}
+.bot-on{background:#EAF3DE;color:#27500A;border:0.5px solid #97C459}
+.bot-off{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F09595}
 .bot-resume{background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27}
-.bot-human{background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB}
 .sidebar-info{border-top:0.5px solid var(--border);padding:10px 12px;flex-shrink:0;display:none}
 .ir{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
 .il{color:var(--text-2)}.iv{font-weight:500}
@@ -235,10 +234,9 @@ function avatarColor(n){const c=[['#CECBF6','#3C3489'],['#9FE1CB','#085041'],['#
 function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
 function lastMsg(h){if(!h)return '';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return '';const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);return(m?m[1].trim():last).slice(0,60)}
 function botStatusBadge(d){
-  if(d.estado==='derivado_humano') return['bot-human','ti-user-off','Bot inactivo — humano activo'];
-  if(d.liberar_en) return['bot-resume','ti-clock','Bot retoma '+humanDate(d.liberar_en)];
-  if(d.estado==='cerrado_negativo'||d.estado==='cerrado_positivo') return['bot-inactive','ti-robot-off','Bot suspendido'];
-  return['bot-active','ti-robot','Bot activo'];
+  if(d.estado==='derivado_humano') return['bot-off','ti-robot-off','Maitena desactivada'];
+  if(d.liberar_en) return['bot-resume','ti-clock','Outbound retoma '+humanDate(d.liberar_en)];
+  return['bot-on','ti-robot','Maitena activa'];
 }
 function pillInfo(d){
   if(d.estado==='derivado_humano')return['ph','ti-user','Conversación con humano activa'];
@@ -337,12 +335,11 @@ function selectDonor(id){
 }
 
 function actionsHtml(){
-  const mn=nextMonthDate();
   return`
     ${sel.estado!=='derivado_humano'?`<button class="btn btn-blue" onclick="doTake()"><i class="ti ti-user-plus" style="font-size:11px"></i> Tomar conversación</button>`:''}
     <button class="btn" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar episodio</button>
-    <button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Cerrar positivo</button>
-    <button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Cerrar negativo</button>`;
+    ${sel.estado!=='cerrado_positivo'?`<button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Cerrar positivo</button>`:''}
+    ${sel.estado!=='cerrado_negativo'?`<button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Cerrar negativo</button>`:''}`;
 }
 
 function inputAreaHtml(){
