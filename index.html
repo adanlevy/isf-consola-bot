@@ -30,7 +30,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dc-name{font-size:13px;font-weight:500;margin-bottom:3px}
 .dc-preview{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;margin:1px 2px 1px 0}
-.bh{background:#E6F1FB;color:#0C447C}.bn{background:#FCEBEB;color:#A32D2D}.bp{background:#EAF3DE;color:#27500A}.br{background:#FAEEDA;color:#633806}
+.bh{background:#E6F1FB;color:#0C447C}.bn{background:#FCEBEB;color:#A32D2D}.bp{background:#EAF3DE;color:#27500A}.br{background:#FAEEDA;color:#633806}.bec{background:#F0EBF9;color:#5B21B6;border:0.5px solid #C4B5FD}
 .bot-on{background:#EAF3DE;color:#27500A;border:0.5px solid #97C459}
 .bot-off{background:#FCEBEB;color:#A32D2D;border:0.5px solid #F09595}
 .bot-resume{background:#FAEEDA;color:#633806;border:0.5px solid #EF9F27}
@@ -45,7 +45,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
 .cn{font-size:14px;font-weight:500}.cm{font-size:11px;color:var(--text-2);margin-top:2px}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500;border:0.5px solid;white-space:nowrap}
-.ph{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.pp{background:#EAF3DE;color:#27500A;border-color:#97C459}.pn{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.pr{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.ph{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.pp{background:#EAF3DE;color:#27500A;border-color:#97C459}.pn{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.pr{background:#FAEEDA;color:#633806;border-color:#EF9F27}.pec{background:#F0EBF9;color:#5B21B6;border-color:#C4B5FD}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;font-size:11px;font-weight:500;border-radius:var(--r);border:1px solid var(--border-2);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;box-shadow:0 1px 2px rgba(0,0,0,0.06);transition:all 0.12s}
 .btn:hover{background:var(--bg-2);box-shadow:0 2px 4px rgba(0,0,0,0.1);transform:translateY(-1px)}
@@ -179,6 +179,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="tab" onclick="switchTab('cerrado_negativo',this)"><span class="tab-n" id="cnt-n">—</span>Negativo</button>
         <button class="tab" onclick="switchTab('cerrado_positivo',this)"><span class="tab-n" id="cnt-p">—</span>Positivo</button>
         <button class="tab" onclick="switchTab('programadas',this)"><span class="tab-n" id="cnt-pr">—</span>Program.</button>
+        <button class="tab" onclick="switchTab('en_conversacion',this)"><span class="tab-n" id="cnt-ec">—</span>Bot</button>
       </div>
     </div>
     <div class="donor-list" id="donor-list"><div class="loading-msg"><i class="ti ti-loader" style="font-size:15px"></i> Cargando...</div></div>
@@ -244,10 +245,11 @@ function pillInfo(d){
   if(d.estado==='derivado_humano') return['ph','ti-user','Con humano'];
   if(d.estado==='cerrado_positivo') return['pp','ti-check','Cerrado positivo'];
   if(d.estado==='cerrado_negativo') return['pn','ti-x','Cerrado negativo'];
+  if(d.estado==='en_conversacion') return['pec','ti-robot','Bot activo'];
   if(!d.estado&&d.liberar_en) return['pr','ti-calendar','Programada'];
   return['ph','ti-circle','Activo'];
 }
-function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';return'br'}
+function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';if(e==='en_conversacion')return'bec';return'br'}
 function parseHist(s){
   if(!s)return[];
   return s.split('\n').filter(l=>l.trim()).map(l=>{
@@ -282,6 +284,8 @@ function updateCounts(d){
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
   const prEl=document.getElementById('cnt-pr');
   if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
+  const ecEl=document.getElementById('cnt-ec');
+  if(ecEl)ecEl.textContent=d.filter(x=>x.estado==='en_conversacion').length;
 }
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderList()}
 function renderList(){
@@ -347,6 +351,7 @@ function actionsHtml(){
 }
 
 function inputAreaHtml(){
+  if(sel.estado==='en_conversacion') return`<div class="input-area"><div class="waiting-reply"><i class="ti ti-robot" style="font-size:15px;flex-shrink:0;color:#5B21B6"></i> Maitena está manejando esta conversación. Podés tomar el control si es necesario.</div></div>`;
   const canChat=sel.estado==='derivado_humano';
   if(!canChat)return'';
   const expired=isWindowExpired(sel.historial);
