@@ -7,17 +7,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#ffffff;--bg-2:#f5f5f3;--bg-3:#eeede9;
-  --text:#1a1a18;--text-2:#6b6b67;--text-3:#9d9d99;
-  --border:rgba(0,0,0,0.12);--border-2:rgba(0,0,0,0.2);
-  --r:8px;--rl:12px;
-}
-@media(prefers-color-scheme:dark){:root{
-  --bg:#1c1c1a;--bg-2:#242422;--bg-3:#2c2c2a;
-  --text:#f0efea;--text-2:#a0a09a;--text-3:#666660;
-  --border:rgba(255,255,255,0.1);--border-2:rgba(255,255,255,0.18);
-}}
+:root{--bg:#ffffff;--bg-2:#f5f5f3;--bg-3:#eeede9;--text:#1a1a18;--text-2:#6b6b67;--text-3:#9d9d99;--border:rgba(0,0,0,0.12);--border-2:rgba(0,0,0,0.2);--r:8px;--rl:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1a;--bg-2:#242422;--bg-3:#2c2c2a;--text:#f0efea;--text-2:#a0a09a;--text-3:#666660;--border:rgba(255,255,255,0.1);--border-2:rgba(255,255,255,0.18)}}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-2);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{height:48px;background:var(--bg);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
 .topbar-brand{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;color:var(--text)}
@@ -48,19 +39,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ch-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:12px}
 .ch-id{display:flex;align-items:center;gap:10px}
 .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
-.cn{font-size:14px;font-weight:500}
-.cm{font-size:11px;color:var(--text-2);margin-top:2px}
+.cn{font-size:14px;font-weight:500}.cm{font-size:11px;color:var(--text-2);margin-top:2px}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500;border:0.5px solid;white-space:nowrap}
-.ph{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
-.pp{background:#EAF3DE;color:#27500A;border-color:#97C459}
-.pn{background:#FCEBEB;color:#A32D2D;border-color:#F09595}
-.pr{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.ph{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.pp{background:#EAF3DE;color:#27500A;border-color:#97C459}.pn{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.pr{background:#FAEEDA;color:#633806;border-color:#EF9F27}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;font-size:11px;border-radius:var(--r);border:0.5px solid var(--border-2);background:transparent;color:var(--text);cursor:pointer;font-family:inherit}
 .btn:hover{background:var(--bg-2)}
 .btn-blue{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}.btn-blue:hover{background:#B5D4F4}
 .btn-green{background:#EAF3DE;color:#27500A;border-color:#97C459}.btn-green:hover{background:#C0DD97}
 .btn-red{background:#FCEBEB;color:#A32D2D;border-color:#F09595}.btn-red:hover{background:#F7C1C1}
+.btn-orange{background:#FAEEDA;color:#633806;border-color:#EF9F27}.btn-orange:hover{background:#F5D5A0}
 .chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:72%;display:flex;flex-direction:column}
 .m-bot{align-self:flex-start}.m-donor{align-self:flex-end}.m-human{align-self:flex-start}
@@ -73,22 +61,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mtime{font-size:10px;color:var(--text-3);margin-top:3px}
 .mtime-r{text-align:right}
 .divider{display:flex;align-items:center;gap:8px;margin:4px 0}
-.dline{flex:1;height:0.5px;background:var(--border)}
-.dtext{font-size:10px;color:var(--text-3);white-space:nowrap}
+.dline{flex:1;height:0.5px;background:var(--border)}.dtext{font-size:10px;color:var(--text-3);white-space:nowrap}
 .input-area{background:var(--bg);border-top:0.5px solid var(--border);padding:12px 16px;flex-shrink:0}
+.window-warning{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;margin-bottom:10px;font-size:12px;color:#633806;display:flex;align-items:flex-start;gap:8px}
 .input-row{display:flex;gap:8px;align-items:flex-end}
 .msg-ta{flex:1;padding:8px 12px;font-size:13px;border:0.5px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);resize:none;font-family:inherit;line-height:1.5}
 .msg-ta:focus{outline:none;border-color:#378ADD}
+.msg-ta:disabled{opacity:0.5;cursor:not-allowed}
 .send-btn{padding:8px 14px;font-size:13px;background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap}
 .send-btn:hover{background:#B5D4F4}
+.waiting-reply{background:var(--bg-2);border:0.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:8px}
 .ai-row{margin-top:7px;display:flex;align-items:flex-start;gap:6px;font-size:11px}
 .ai-lbl{color:var(--text-3);flex-shrink:0;display:flex;align-items:center;gap:3px;padding-top:1px}
 .ai-txt{color:#185FA5;cursor:pointer;line-height:1.5;border-bottom:0.5px dashed #378ADD}
 .ai-loading{color:var(--text-3);font-style:italic}
 .ai-rbtn{padding:2px 6px;border-radius:var(--r);border:0.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-size:10px;margin-left:4px;font-family:inherit}
-.overlay-wrap{position:absolute;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:100;min-height:600px}
+.overlay-wrap{position:absolute;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:100}
 .overlay-wrap.open{display:flex}
-.modal{background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--border);width:480px;max-height:88vh;overflow-y:auto;flex-shrink:0}
+.modal{background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--border);width:500px;max-height:88vh;overflow-y:auto;flex-shrink:0}
 .modal-h{padding:14px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .modal-title{font-size:14px;font-weight:500}
 .modal-body{padding:16px;display:flex;flex-direction:column;gap:10px}
@@ -98,72 +88,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .field input:focus{outline:none;border-color:#378ADD}
 .field-section{font-size:11px;font-weight:500;color:var(--text-2);padding-top:6px;border-top:0.5px solid var(--border)}
 .modal-f{padding:12px 16px;border-top:0.5px solid var(--border);display:flex;justify-content:flex-end;gap:6px}
-.setup-banner{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;margin:12px}
-.loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
-.error-msg{padding:14px;font-size:12px;color:#A32D2D}
 .cfg-file-area{display:flex;gap:6px;align-items:center;margin-bottom:4px}
 .cfg-file-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;font-size:11px;border-radius:var(--r);border:0.5px solid var(--border-2);background:var(--bg-2);color:var(--text);cursor:pointer;font-family:inherit}
 .cfg-file-btn:hover{background:var(--bg-3)}
 .cfg-file-input{display:none}
 .cfg-file-note{font-size:10px;color:var(--text-2);line-height:1.4;padding:6px 8px;background:var(--bg-2);border-radius:var(--r);border:0.5px solid var(--border)}
-
+.setup-banner{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;margin:12px}
+.loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
+.error-msg{padding:14px;font-size:12px;color:#A32D2D}
 </style>
 </head>
 <body>
-
 <div class="overlay-wrap" id="overlay">
   <div class="modal">
-    <div class="modal-h">
-      <span class="modal-title">Configuración</span>
-      <button class="icon-btn" onclick="closeSettings()"><i class="ti ti-x"></i></button>
-    </div>
+    <div class="modal-h"><span class="modal-title">Configuración</span><button class="icon-btn" onclick="closeSettings()"><i class="ti ti-x"></i></button></div>
     <div class="modal-body">
       <div class="field">
         <label>Importar / exportar configuración</label>
         <div class="cfg-file-area">
-          <label class="cfg-file-btn" for="cfg-file-input">
-            <i class="ti ti-upload" style="font-size:13px"></i> Cargar archivo .json
-          </label>
+          <label class="cfg-file-btn" for="cfg-file-input"><i class="ti ti-upload" style="font-size:13px"></i> Cargar archivo .json</label>
           <input type="file" id="cfg-file-input" class="cfg-file-input" accept=".json" onchange="loadConfigFile(event)">
-          <button class="cfg-file-btn" onclick="exportConfig()">
-            <i class="ti ti-download" style="font-size:13px"></i> Exportar
-          </button>
+          <button class="cfg-file-btn" onclick="exportConfig()"><i class="ti ti-download" style="font-size:13px"></i> Exportar</button>
         </div>
-        <div class="cfg-file-note">
-          Formato: archivo <code style="font-size:10px">isf_config.json</code> con las claves op, ak, wl, ws, wt, wli, wr.
-          Guardalo en un lugar seguro — contiene tu API key.
-        </div>
+        <div class="cfg-file-note">Formato: archivo <code style="font-size:10px">isf_config.json</code>. Guardalo en un lugar seguro — contiene claves privadas.</div>
       </div>
       <div class="field-section" style="border-top:none;padding-top:0">Configuración manual</div>
-      <div class="field">
-        <label>Nombre del operador</label>
-        <input type="text" id="cfg-op" placeholder="Ej: Lucía">
-      </div>
-      <div class="field">
-        <label>Anthropic API Key (sugerencias IA)</label>
-        <input type="password" id="cfg-ak" placeholder="sk-ant-...">
-      </div>
+      <div class="field"><label>Nombre del operador</label><input type="text" id="cfg-op" placeholder="Ej: Lucía"></div>
       <div class="field-section">Webhooks de Make</div>
-      <div class="field">
-        <label>Cargar conversaciones — wl (GET)</label>
-        <input type="text" id="cfg-wl" placeholder="https://hook.make.com/...">
-      </div>
-      <div class="field">
-        <label>Enviar mensaje — ws (POST)</label>
-        <input type="text" id="cfg-ws" placeholder="https://hook.make.com/...">
-      </div>
-      <div class="field">
-        <label>Tomar conversación — wt (POST)</label>
-        <input type="text" id="cfg-wt" placeholder="https://hook.make.com/...">
-      </div>
-      <div class="field">
-        <label>Liberar episodio — wli (POST)</label>
-        <input type="text" id="cfg-wli" placeholder="https://hook.make.com/...">
-      </div>
-      <div class="field">
-        <label>Resolver — wr (POST)</label>
-        <input type="text" id="cfg-wr" placeholder="https://hook.make.com/...">
-      </div>
+      <div class="field"><label>Cargar conversaciones — wl (GET)</label><input type="text" id="cfg-wl" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Enviar mensaje — ws (POST)</label><input type="text" id="cfg-ws" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Template reapertura — wtr (POST)</label><input type="text" id="cfg-wtr" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Tomar conversación — wt (POST)</label><input type="text" id="cfg-wt" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Liberar episodio — wli (POST)</label><input type="text" id="cfg-wli" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Resolver — wr (POST)</label><input type="text" id="cfg-wr" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Sugerencia IA — wa (POST)</label><input type="text" id="cfg-wa" placeholder="https://hook.make.com/..."></div>
     </div>
     <div class="modal-f">
       <button class="btn" onclick="closeSettings()">Cancelar</button>
@@ -173,10 +131,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="topbar">
-  <div class="topbar-brand">
-    <i class="ti ti-message-circle" style="font-size:16px;color:#185FA5"></i>
-    ISF — Gestión de conversaciones
-  </div>
+  <div class="topbar-brand"><i class="ti ti-message-circle" style="font-size:16px;color:#185FA5"></i> ISF — Gestión de conversaciones</div>
   <div class="topbar-right">
     <button class="icon-btn" onclick="loadAll()" title="Recargar"><i class="ti ti-refresh"></i></button>
     <button class="icon-btn" onclick="openSettings()" title="Configuración"><i class="ti ti-settings"></i></button>
@@ -192,9 +147,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="tab" onclick="switchTab('cerrado_positivo',this)"><span class="tab-n" id="cnt-p">—</span>Positivo</button>
       </div>
     </div>
-    <div class="donor-list" id="donor-list">
-      <div class="loading-msg"><i class="ti ti-loader" style="font-size:15px"></i> Cargando...</div>
-    </div>
+    <div class="donor-list" id="donor-list"><div class="loading-msg"><i class="ti ti-loader" style="font-size:15px"></i> Cargando...</div></div>
     <div class="sidebar-info" id="sidebar-info">
       <div class="ir"><span class="il">Donación mensual</span><span class="iv" id="si-monto">—</span></div>
       <div class="ir"><span class="il">Medio de pago</span><span class="iv" id="si-medio">—</span></div>
@@ -203,15 +156,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
   <div class="conv" id="conv">
-    <div class="empty">
-      <i class="ti ti-message-dots" style="font-size:36px;color:#D3D1C7"></i>
-      Seleccioná una conversación
-    </div>
+    <div class="empty"><i class="ti ti-message-dots" style="font-size:36px;color:#D3D1C7"></i>Seleccioná una conversación</div>
   </div>
 </div>
 
 <script>
-const CK='isf_conv_v2';
+const CK='isf_conv_v3';
 let donors=[],tab='derivado_humano',sel=null;
 
 function cfg(){try{return JSON.parse(localStorage.getItem(CK)||'{}')}catch(e){return {}}}
@@ -219,73 +169,72 @@ function saveCfg(c){localStorage.setItem(CK,JSON.stringify(c))}
 
 function openSettings(){
   const c=cfg();
-  ['op','ak','wl','ws','wt','wli','wr'].forEach(k=>{
-    const el=document.getElementById('cfg-'+k);
-    if(el) el.value=c[k]||'';
-  });
+  ['op','wl','ws','wtr','wt','wli','wr','wa'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
   document.getElementById('overlay').classList.add('open');
 }
 function closeSettings(){document.getElementById('overlay').classList.remove('open')}
 function saveSettings(){
   const c={};
-  ['op','ak','wl','ws','wt','wli','wr'].forEach(k=>{c[k]=document.getElementById('cfg-'+k).value.trim()});
+  ['op','wl','ws','wtr','wt','wli','wr','wa'].forEach(k=>{c[k]=document.getElementById('cfg-'+k).value.trim()});
   saveCfg(c);closeSettings();loadAll();
 }
+function loadConfigFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const c=JSON.parse(ev.target.result);
+      ['op','wl','ws','wtr','wt','wli','wr','wa'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
+      e.target.value='';
+    }catch(err){alert('El archivo no es un JSON válido.');}
+  };
+  r.readAsText(file);
+}
+function exportConfig(){
+  const blob=new Blob([JSON.stringify(cfg(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='isf_config.json';a.click();URL.revokeObjectURL(url);
+}
 
-function nextMonthDate(){
-  const d=new Date();d.setMonth(d.getMonth()+1,1);
-  return d.toISOString().split('T')[0];
-}
-function humanDate(iso){
-  if(!iso) return '—';
-  const d=new Date(iso+'T12:00:00');
-  return d.toLocaleDateString('es-AR',{day:'numeric',month:'long'});
-}
+function nextMonthDate(){const d=new Date();d.setMonth(d.getMonth()+1,1);return d.toISOString().split('T')[0]}
+function humanDate(iso){if(!iso)return '—';const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('es-AR',{day:'numeric',month:'long'})}
 function initials(n){return n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2)}
-function avatarColor(n){
-  const c=[['#CECBF6','#3C3489'],['#9FE1CB','#085041'],['#B5D4F4','#0C447C'],['#F5C4B3','#712B13'],['#C0DD97','#27500A']];
-  return c[n.charCodeAt(0)%c.length];
-}
-function calcMeses(dateStr){
-  if(!dateStr) return 0;
-  const d=new Date(dateStr),now=new Date();
-  return Math.max(0,(now.getFullYear()-d.getFullYear())*12+now.getMonth()-d.getMonth());
-}
-function lastMsg(hist){
-  if(!hist) return '';
-  const lines=hist.trim().split('\n').filter(l=>l.trim());
-  const last=lines[lines.length-1];
-  if(!last) return '';
-  const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);
-  return (m?m[1].trim():last).slice(0,60);
-}
+function avatarColor(n){const c=[['#CECBF6','#3C3489'],['#9FE1CB','#085041'],['#B5D4F4','#0C447C'],['#F5C4B3','#712B13'],['#C0DD97','#27500A']];return c[n.charCodeAt(0)%c.length]}
+function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
+function lastMsg(h){if(!h)return '';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return '';const m=last.match(/^\[[^\]]+\]\s+[^:]+:\s+(.+)$/s);return(m?m[1].trim():last).slice(0,60)}
 function pillInfo(d){
-  if(d.estado==='derivado_humano') return ['ph','ti-user','Conversación con humano activa'];
-  if(d.estado==='cerrado_positivo'){
-    if(d.liberar_en) return ['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];
-    return ['pp','ti-check','Cerrado positivo — verificar cobro'];
-  }
-  if(d.liberar_en) return ['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];
-  return ['pn','ti-ban','Bot suspendido — sin reanudación'];
+  if(d.estado==='derivado_humano')return['ph','ti-user','Conversación con humano activa'];
+  if(d.estado==='cerrado_positivo'){if(d.liberar_en)return['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];return['pp','ti-check','Cerrado positivo — verificar cobro']}
+  if(d.liberar_en)return['pr','ti-clock',`Bot retoma el ${humanDate(d.liberar_en)}`];
+  return['pn','ti-ban','Bot suspendido — sin reanudación'];
 }
-function badgeClass(estado){
-  if(estado==='derivado_humano') return 'bh';
-  if(estado==='cerrado_positivo') return 'bp';
-  return 'bn';
-}
+function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';return'bn'}
 function parseHist(s){
-  if(!s) return [];
+  if(!s)return[];
   return s.split('\n').filter(l=>l.trim()).map(l=>{
     const m=l.match(/^\[([^\]]+)\]\s+([^:]+):\s+(.+)$/s);
-    if(!m) return null;
+    if(!m)return null;
     const sender=m[2].trim().toUpperCase();
     const type=['MAITENA','GENARO'].includes(sender)?'bot':sender==='DONANTE'?'donor':'human';
-    return {time:m[1].trim(),sender:m[2].trim(),type,text:m[3].trim()};
+    return{time:m[1].trim(),sender:m[2].trim(),type,text:m[3].trim()};
   }).filter(Boolean);
 }
-function nowStr(){
-  const n=new Date();
-  return `${n.getDate().toString().padStart(2,'0')}/${(n.getMonth()+1).toString().padStart(2,'0')} ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;
+function nowStr(){const n=new Date();return`${n.getDate().toString().padStart(2,'0')}/${(n.getMonth()+1).toString().padStart(2,'0')} ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`}
+
+// Detectar si la ventana de 24hs está vencida
+function isWindowExpired(historial){
+  if(!historial)return true;
+  const msgs=parseHist(historial);
+  const lastDonor=msgs.filter(m=>m.type==='donor').pop();
+  if(!lastDonor)return true;
+  // Parsear timestamp DD/MM HH:mm
+  const match=lastDonor.time.match(/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})/);
+  if(!match)return true;
+  const now=new Date();
+  const msgDate=new Date(now.getFullYear(),parseInt(match[2])-1,parseInt(match[1]),parseInt(match[3]),parseInt(match[4]));
+  // Si la fecha calculada es en el futuro, probablemente es del año anterior
+  if(msgDate>now)msgDate.setFullYear(now.getFullYear()-1);
+  return(now-msgDate)>24*60*60*1000;
 }
 
 function updateCounts(d){
@@ -293,23 +242,14 @@ function updateCounts(d){
   document.getElementById('cnt-n').textContent=d.filter(x=>x.estado==='cerrado_negativo').length;
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
 }
-function switchTab(t,el){
-  tab=t;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  el.classList.add('active');
-  renderList();
-}
+function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderList()}
 function renderList(){
   const list=document.getElementById('donor-list');
   const filtered=donors.filter(d=>d.estado===tab);
-  if(!filtered.length){
-    list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';
-    return;
-  }
+  if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';return}
   list.innerHTML=filtered.map(d=>{
-    const [pc,pi,pt]=pillInfo(d);
-    const isSel=sel&&sel.id===d.id;
-    return `<div class="donor-card${isSel?' sel':''}" onclick="selectDonor('${d.id}')">
+    const[pc,pi,pt]=pillInfo(d);const isSel=sel&&sel.id===d.id;
+    return`<div class="donor-card${isSel?' sel':''}" onclick="selectDonor('${d.id}')">
       <div class="dc-name">${d.name}</div>
       <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
       <span class="badge ${badgeClass(d.estado)}"><i class="ti ${pi}" style="font-size:9px"></i> ${pt}</span>
@@ -319,42 +259,29 @@ function renderList(){
 }
 
 async function loadAll(){
-  const c=cfg();
-  const list=document.getElementById('donor-list');
-  if(!c.wl){
-    list.innerHTML=`<div class="setup-banner"><i class="ti ti-settings" style="font-size:14px"></i> Configurá los webhooks para comenzar.</div>`;
-    updateCounts([]);return;
-  }
+  const c=cfg();const list=document.getElementById('donor-list');
+  if(!c.wl){list.innerHTML=`<div class="setup-banner"><i class="ti ti-settings" style="font-size:14px"></i> Configurá los webhooks para comenzar.</div>`;updateCounts([]);return}
   list.innerHTML='<div class="loading-msg"><i class="ti ti-loader" style="font-size:15px"></i> Cargando...</div>';
   try{
-    const r=await fetch(c.wl);
-    const data=await r.json();
+    const r=await fetch(c.wl);const data=await r.json();
     const records=data.records||[];
     donors=records.map(r=>({
-      id:r.Id,
-      name:`${r.npe03__Contact__r?.FirstName||''} ${r.npe03__Contact__r?.LastName||''}`.trim(),
+      id:r.Id,name:`${r.npe03__Contact__r?.FirstName||''} ${r.npe03__Contact__r?.LastName||''}`.trim(),
       phone:(r.npe03__Contact__r?.MobilePhone||'').replace(/^0/,''),
-      estado:r.WhatsApp_Estado__c,
-      monto:r.npe03__Amount__c,
-      medio_pago:r.Medio_de_pago__c,
-      antiguedad_meses:calcMeses(r.npe03__Date_Established__c),
-      intentos:r.WhatsApp_Intentos__c||0,
-      liberar_en:r.Whatsapp_Liberar_en__c,
-      historial:r.WhatsApp_Historial_Archivo__c||'',
+      estado:r.WhatsApp_Estado__c,monto:r.npe03__Amount__c,medio_pago:r.Medio_de_pago__c,
+      antiguedad_meses:calcMeses(r.npe03__Date_Established__c),intentos:r.WhatsApp_Intentos__c||0,
+      liberar_en:r.Whatsapp_Liberar_en__c,historial:r.WhatsApp_Historial_Archivo__c||'',
+      nombre:r.npe03__Contact__r?.FirstName||'',
       ultimo_mensaje:lastMsg(r.WhatsApp_Historial_Archivo__c||'')
     }));
     updateCounts(donors);renderList();
-  }catch(e){
-    list.innerHTML='<div class="error-msg">Error al conectar con Make. Verificá la URL del webhook.</div>';
-  }
+  }catch(e){list.innerHTML='<div class="error-msg">Error al conectar con Make. Verificá la URL del webhook.</div>'}
 }
 
 function selectDonor(id){
-  sel=donors.find(d=>d.id===id);
-  if(!sel) return;
+  sel=donors.find(d=>d.id===id);if(!sel)return;
   renderList();
-  const si=document.getElementById('sidebar-info');
-  si.style.display='block';
+  const si=document.getElementById('sidebar-info');si.style.display='block';
   const m=parseInt(sel.monto||0);
   document.getElementById('si-monto').textContent=m?'$'+m.toLocaleString('es-AR'):'—';
   document.getElementById('si-medio').textContent=sel.medio_pago||'—';
@@ -363,195 +290,160 @@ function selectDonor(id){
   document.getElementById('si-int').textContent=sel.intentos||'0';
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
-  if(cfg().ak) getAiSuggestion(sel,msgs);
+  if(sel.estado==='derivado_humano'&&!isWindowExpired(sel.historial))getAiSuggestion(sel,msgs);
 }
 
 function actionsHtml(){
   const mn=nextMonthDate();
-  return `
+  return`
     ${sel.estado!=='derivado_humano'?`<button class="btn btn-blue" onclick="doTake()"><i class="ti ti-user-plus" style="font-size:11px"></i> Tomar conversación</button>`:''}
     <button class="btn" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar para ${humanDate(mn)}</button>
     <button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Cerrar positivo</button>
     <button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Cerrar negativo</button>`;
 }
 
+function inputAreaHtml(){
+  const canChat=sel.estado==='derivado_humano';
+  if(!canChat)return'';
+  const expired=isWindowExpired(sel.historial);
+  if(expired){
+    return`<div class="input-area">
+      <div class="window-warning">
+        <i class="ti ti-clock-exclamation" style="font-size:16px;flex-shrink:0"></i>
+        <div><strong>Ventana de 24hs vencida.</strong> El donante no escribió recientemente. Debés enviar el template de reapertura y esperar su respuesta antes de escribir libremente.</div>
+      </div>
+      <button class="btn btn-orange" style="width:100%;justify-content:center" onclick="doTemplate()">
+        <i class="ti ti-send" style="font-size:12px"></i> Enviar template de reapertura
+      </button>
+    </div>`;
+  }
+  return`<div class="input-area">
+    <div class="input-row">
+      <textarea class="msg-ta" id="msg-input" rows="2" placeholder="Escribí tu respuesta como equipo ISF..." onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:14px"></i> Enviar</button>
+    </div>
+    <div class="ai-row">
+      <span class="ai-lbl"><i class="ti ti-sparkles" style="font-size:11px;color:#378ADD"></i> Sugerencia:</span>
+      <span id="ai-s" class="ai-loading">Generando...</span>
+      <button class="ai-rbtn" onclick="refreshAi()" title="Regenerar"><i class="ti ti-refresh" style="font-size:10px"></i></button>
+    </div>
+  </div>`;
+}
+
 function renderConv(d,msgs){
-  const [bg,fg]=avatarColor(d.name);
-  const [pc,pi,pt]=pillInfo(d);
-  const canChat=d.estado==='derivado_humano';
-  const msgsHtml=msgs.length?msgs.map((m,i)=>{
+  const[bg,fg]=avatarColor(d.name);const[pc,pi,pt]=pillInfo(d);
+  const msgsHtml=msgs.length?msgs.map(m=>{
     const cls=m.type==='donor'?'m-donor':m.type==='bot'?'m-bot':'m-human';
     const bcls=m.type==='donor'?'bdonor':m.type==='bot'?'bbot':'bhuman';
-    const lbl=m.type==='donor'
-      ?`<div class="mlabel mlabel-r">Donante</div>`
-      :m.type==='bot'
-        ?`<div class="mlabel"><i class="ti ti-robot" style="font-size:10px"></i> ${m.sender}</div>`
-        :`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> Equipo ISF</div>`;
-    return `<div class="msg ${cls}">${lbl}<div class="bubble ${bcls}">${m.text}</div><div class="mtime${m.type==='donor'?' mtime-r':''}">${m.time}</div></div>`;
+    const lbl=m.type==='donor'?`<div class="mlabel mlabel-r">Donante</div>`:m.type==='bot'?`<div class="mlabel"><i class="ti ti-robot" style="font-size:10px"></i> ${m.sender}</div>`:`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${m.sender}</div>`;
+    return`<div class="msg ${cls}">${lbl}<div class="bubble ${bcls}">${m.text}</div><div class="mtime${m.type==='donor'?' mtime-r':''}">${m.time}</div></div>`;
   }).join(''):'<div style="text-align:center;font-size:12px;color:var(--text-2);padding:24px">Sin mensajes registrados</div>';
-
-  const inputHtml=canChat?`
-    <div class="input-area">
-      <div class="input-row">
-        <textarea class="msg-ta" id="msg-input" rows="2" placeholder="Escribí tu respuesta como equipo ISF..." onkeydown="handleKey(event)"></textarea>
-        <button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:14px"></i> Enviar</button>
-      </div>
-      <div class="ai-row">
-        <span class="ai-lbl"><i class="ti ti-sparkles" style="font-size:11px;color:#378ADD"></i> Sugerencia:</span>
-        <span id="ai-s" class="ai-loading">Generando...</span>
-        <button class="ai-rbtn" onclick="refreshAi()" title="Regenerar"><i class="ti ti-refresh" style="font-size:10px"></i></button>
-      </div>
-    </div>`:'';
 
   document.getElementById('conv').innerHTML=`
     <div class="conv-header">
       <div class="ch-top">
         <div class="ch-id">
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
-          <div>
-            <div class="cn">${d.name}</div>
-            <div class="cm">+54 9 ${d.phone} · ${d.intentos||0} intentos del bot</div>
-          </div>
+          <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone} · ${d.intentos||0} intentos del bot</div></div>
         </div>
         <div class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
     </div>
     <div class="chat" id="chat">${msgsHtml}</div>
-    ${inputHtml}`;
-  const chat=document.getElementById('chat');
-  if(chat) chat.scrollTop=chat.scrollHeight;
+    ${inputAreaHtml()}`;
+  const chat=document.getElementById('chat');if(chat)chat.scrollTop=chat.scrollHeight;
 }
 
-function updatePill(){
-  if(!sel) return;
-  const [pc,pi,pt]=pillInfo(sel);
-  const pill=document.getElementById('status-pill');
-  if(pill){pill.className='pill '+pc;pill.innerHTML=`<i class="ti ${pi}" style="font-size:11px"></i> ${pt}`;}
-}
-function refreshActions(){
-  const acts=document.getElementById('actions');
-  if(acts) acts.innerHTML=actionsHtml();
-}
+function updatePill(){if(!sel)return;const[pc,pi,pt]=pillInfo(sel);const pill=document.getElementById('status-pill');if(pill){pill.className='pill '+pc;pill.innerHTML=`<i class="ti ${pi}" style="font-size:11px"></i> ${pt}`}}
+function refreshActions(){const acts=document.getElementById('actions');if(acts)acts.innerHTML=actionsHtml()}
 
 async function doTake(){
-  if(!sel) return;
-  const c=cfg();
+  if(!sel)return;const c=cfg();
   if(c.wt){try{await fetch(c.wt,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id})})}catch(e){}}
-  sel.estado='derivado_humano';
-  donors=donors.map(d=>d.id===sel.id?sel:d);
+  sel.estado='derivado_humano';donors=donors.map(d=>d.id===sel.id?sel:d);
   updateCounts(donors);updatePill();refreshActions();
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
-  if(cfg().ak) getAiSuggestion(sel,msgs);
+  if(!isWindowExpired(sel.historial))getAiSuggestion(sel,msgs);
 }
 
 async function doSend(){
-  const inp=document.getElementById('msg-input');
-  if(!inp||!sel) return;
-  const text=inp.value.trim();
-  if(!text) return;
+  const inp=document.getElementById('msg-input');if(!inp||!sel)return;
+  const text=inp.value.trim();if(!text)return;
   inp.disabled=true;
-  const c=cfg();
-  const op=c.op||'Equipo ISF';
-  if(c.ws){try{await fetch(c.ws,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,phone:sel.phone,message:text,operatorName:op})})}catch(e){}}
-  inp.value='';inp.disabled=false;inp.focus();
+  const c=cfg();const op=c.op||'Equipo ISF';
   const entry=`[${nowStr()}] ${op}: ${text}`;
-  sel.historial=(sel.historial?sel.historial+'\n':'')+entry;
-  sel.ultimo_mensaje=text;
-  donors=donors.map(d=>d.id===sel.id?sel:d);
-  const chat=document.getElementById('chat');
-  if(chat){
-    const el=document.createElement('div');
-    el.className='msg m-human';
-    el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${text}</div><div class="mtime">${nowStr()}</div>`;
-    chat.appendChild(el);chat.scrollTop=chat.scrollHeight;
+  const updatedHistorial=(sel.historial?sel.historial+'\n':'')+entry;
+  if(c.ws){
+    try{
+      const r=await fetch(c.ws,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,phone:sel.phone,message:text,operatorName:op,updatedHistorial})});
+      const data=await r.json();
+      if(data.error==='window_expired'){
+        inp.disabled=false;
+        const ia=document.querySelector('.input-area');
+        if(ia)ia.innerHTML=`<div class="window-warning"><i class="ti ti-clock-exclamation" style="font-size:16px;flex-shrink:0"></i><div><strong>Ventana vencida.</strong> El mensaje no se envió. Usá el template de reapertura.</div></div><button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:8px" onclick="doTemplate()"><i class="ti ti-send" style="font-size:12px"></i> Enviar template de reapertura</button>`;
+        return;
+      }
+    }catch(e){}
   }
-  if(c.ak) getAiSuggestion(sel,parseHist(sel.historial));
-}
-
-async function doLiberate(){
-  if(!sel) return;
-  const c=cfg();const mn=nextMonthDate();
-  if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:mn})})}catch(e){}}
-  sel.estado=sel.estado;sel.liberar_en=mn;
-  donors=donors.map(d=>d.id===sel.id?sel:d);
-  updatePill();renderList();
-}
-
-async function doResolve(res){
-  if(!sel) return;
-  const c=cfg();
-  if(c.wr){try{await fetch(c.wr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,resolution:res})})}catch(e){}}
-  sel.estado=res;
-  donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(donors);renderList();updatePill();refreshActions();
-  const inp=document.querySelector('.input-area');
-  if(inp) inp.remove();
-}
-
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}
-
-async function getAiSuggestion(d,msgs){
-  const el=document.getElementById('ai-s');
-  if(!el) return;
-  el.className='ai-loading';el.textContent='Generando...';el.onclick=null;
-  const c=cfg();
-  if(!c.ak){el.className='';el.style.color='var(--text-3)';el.textContent='Configurá la API key para sugerencias.';return;}
-  const last=msgs.slice(-5).map(m=>`${m.sender}: ${m.text}`).join('\n');
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':c.ak,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:120,
-        system:'Sos parte del equipo de ISF Argentina. Respondé de forma cálida y breve (1-2 oraciones). No uses signos de apertura (¿ ¡). Solo el texto del mensaje, sin explicaciones.',
-        messages:[{role:'user',content:`Donante: ${d.name}. Donación: $${d.monto}/mes. Estado: ${d.estado}.\nÚltimos mensajes:\n${last}\n\nSugerí una respuesta breve del equipo ISF.`}]
-      })
-    });
-    const data=await r.json();
-    const txt=data.content?.[0]?.text;
-    if(!el.isConnected) return;
-    if(txt){el.className='ai-txt';el.textContent=txt;el.onclick=()=>{const i=document.getElementById('msg-input');if(i){i.value=txt;i.focus();}};}
-    else{el.className='';el.textContent='Sin sugerencia.';}
-  }catch(e){if(el.isConnected){el.className='';el.textContent='Error al generar sugerencia.';}}
-}
-
-async function refreshAi(){
-  if(!sel) return;
+  sel.historial=updatedHistorial;sel.ultimo_mensaje=text;donors=donors.map(d=>d.id===sel.id?sel:d);
+  inp.value='';inp.disabled=false;inp.focus();
+  const chat=document.getElementById('chat');
+  if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${text}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
   getAiSuggestion(sel,parseHist(sel.historial));
 }
 
-function loadConfigFile(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const c=JSON.parse(ev.target.result);
-      ['op','ak','wl','ws','wt','wli','wr'].forEach(k=>{
-        const el=document.getElementById('cfg-'+k);
-        if(el&&c[k]) el.value=c[k];
-      });
-      // Reset file input
-      e.target.value='';
-    }catch(err){
-      alert('El archivo no es un JSON válido. Verificá el formato.');
-    }
-  };
-  reader.readAsText(file);
+async function doTemplate(){
+  if(!sel)return;const c=cfg();const op=c.op||'Equipo ISF';
+  const templateText=`Hola ${sel.nombre}, te escribe ${op} del equipo de ISF Argentina. Quedó pendiente la conversación, te parece retomar?`;
+  const entry=`[${nowStr()}] ${op}: ${templateText}`;
+  const updatedHistorial=(sel.historial?sel.historial+'\n':'')+entry;
+  if(c.wtr){try{await fetch(c.wtr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,phone:sel.phone,nombre:sel.nombre,operatorName:op,updatedHistorial})})}catch(e){}}
+  sel.historial=updatedHistorial;sel.ultimo_mensaje=templateText;sel.estado='derivado_humano';
+  donors=donors.map(d=>d.id===sel.id?sel:d);
+  updateCounts(donors);updatePill();
+  const ia=document.querySelector('.input-area');
+  if(ia)ia.innerHTML=`<div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div>`;
+  const chat=document.getElementById('chat');
+  if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${templateText}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
 }
 
-function exportConfig(){
+async function doLiberate(){
+  if(!sel)return;const c=cfg();const mn=nextMonthDate();
+  if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:mn})})}catch(e){}}
+  sel.liberar_en=mn;donors=donors.map(d=>d.id===sel.id?sel:d);updatePill();renderList();
+}
+
+async function doResolve(res){
+  if(!sel)return;const c=cfg();
+  if(c.wr){try{await fetch(c.wr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,resolution:res})})}catch(e){}}
+  sel.estado=res;donors=donors.map(d=>d.id===sel.id?sel:d);
+  updateCounts(donors);renderList();updatePill();refreshActions();
+  const inp=document.querySelector('.input-area');if(inp)inp.remove();
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
+
+async function getAiSuggestion(d,msgs){
+  const el=document.getElementById('ai-s');if(!el)return;
+  el.className='ai-loading';el.textContent='Generando...';el.onclick=null;
   const c=cfg();
-  const blob=new Blob([JSON.stringify(c,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='isf_config.json';a.click();
-  URL.revokeObjectURL(url);
+  if(!c.wa){el.className='';el.style.color='var(--text-3)';el.textContent='Configurá el webhook wa para sugerencias.';return}
+  const last=msgs.slice(-5).map(m=>`${m.sender}: ${m.text}`).join('\n');
+  try{
+    const r=await fetch(c.wa,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:d.nombre,monto:String(d.monto||''),estado:d.estado,historial:last})});
+    const data=await r.json();
+    const txt=data.suggestion;
+    if(!el.isConnected)return;
+    if(txt){el.className='ai-txt';el.textContent=txt;el.onclick=()=>{const i=document.getElementById('msg-input');if(i){i.value=txt;i.focus()}}}
+    else{el.className='';el.textContent='Sin sugerencia.'}
+  }catch(e){if(el.isConnected){el.className='';el.textContent='Error al obtener sugerencia.'}}
 }
 
-if(!cfg().wl) setTimeout(openSettings,400);
+async function refreshAi(){if(!sel)return;getAiSuggestion(sel,parseHist(sel.historial))}
+
+if(!cfg().wl)setTimeout(openSettings,400);
 loadAll();
 </script>
 </body>
