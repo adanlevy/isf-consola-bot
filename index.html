@@ -96,6 +96,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .setup-banner{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#633806;display:flex;align-items:center;gap:8px;margin:12px}
 .loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
 .error-msg{padding:14px;font-size:12px;color:#A32D2D}
+.new-msg-badge{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#185FA5;color:#fff;padding:6px 14px;border-radius:99px;font-size:12px;cursor:pointer;display:none;align-items:center;gap:6px;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.new-msg-badge.show{display:flex}
+.poll-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.5);flex-shrink:0}
+.poll-dot.active{background:#4ade80;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 </style>
 </head>
 <body>
@@ -131,11 +136,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="topbar">
-  <div class="topbar-brand"><i class="ti ti-message-circle" style="font-size:16px;color:#185FA5"></i> ISF — Gestión de conversaciones</div>
+  <div class="topbar-brand"><i class="ti ti-message-circle" style="font-size:16px;color:#185FA5"></i> ISF — Gestión de conversaciones<span class="poll-dot" id="poll-dot" title="Actualización automática cada 30s"></span></div>
   <div class="topbar-right">
     <button class="icon-btn" onclick="loadAll()" title="Recargar"><i class="ti ti-refresh"></i></button>
     <button class="icon-btn" onclick="openSettings()" title="Configuración"><i class="ti ti-settings"></i></button>
   </div>
+</div>
+
+<div class="new-msg-badge" id="new-msg-badge" onclick="scrollToNew()">
+  <i class="ti ti-arrow-down" style="font-size:13px"></i> Nuevo mensaje del donante
 </div>
 
 <div class="app">
@@ -443,8 +452,86 @@ async function getAiSuggestion(d,msgs){
 
 async function refreshAi(){if(!sel)return;getAiSuggestion(sel,parseHist(sel.historial))}
 
+// ── Polling automático ──────────────────────────────────────
+let pollTimer=null;
+let lastHistorial='';
+
+async function silentRefresh(){
+  const c=cfg();if(!c.wl)return;
+  const dot=document.getElementById('poll-dot');
+  if(dot)dot.classList.add('active');
+  try{
+    const r=await fetch(c.wl);const data=await r.json();
+    const records=data.records||[];
+    const updated=records.map(r=>({
+      id:r.Id,name:`${r.npe03__Contact__r?.FirstName||''} ${r.npe03__Contact__r?.LastName||''}`.trim(),
+      phone:(r.npe03__Contact__r?.MobilePhone||'').replace(/^0/,''),
+      estado:r.WhatsApp_Estado__c,monto:r.npe03__Amount__c,medio_pago:r.Medio_de_pago__c,
+      antiguedad_meses:calcMeses(r.npe03__Date_Established__c),intentos:r.WhatsApp_Intentos__c||0,
+      liberar_en:r.Whatsapp_Liberar_en__c,historial:r.WhatsApp_Historial_Archivo__c||'',
+      nombre:r.npe03__Contact__r?.FirstName||'',
+      ultimo_mensaje:lastMsg(r.WhatsApp_Historial_Archivo__c||'')
+    }));
+    // Detectar mensajes nuevos en la conversación activa
+    if(sel){
+      const fresh=updated.find(d=>d.id===sel.id);
+      if(fresh&&fresh.historial!==sel.historial){
+        const oldMsgs=parseHist(sel.historial);
+        const newMsgs=parseHist(fresh.historial);
+        const added=newMsgs.slice(oldMsgs.length);
+        if(added.length>0){
+          // Hay mensajes nuevos — appendar al chat
+          sel.historial=fresh.historial;
+          sel.ultimo_mensaje=fresh.ultimo_mensaje;
+          appendMessages(added);
+          // Si hay mensajes del donante, ofrecer nueva sugerencia
+          if(added.some(m=>m.type==='donor')&&sel.estado==='derivado_humano'&&!isWindowExpired(sel.historial)){
+            // Refrescar input si la ventana estaba vencida
+            const ia=document.querySelector('.input-area');
+            if(ia&&ia.querySelector('.waiting-reply')){
+              ia.innerHTML=`<div class="input-row"><textarea class="msg-ta" id="msg-input" rows="2" placeholder="Escribí tu respuesta como equipo ISF..." onkeydown="handleKey(event)"></textarea><button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:14px"></i> Enviar</button></div><div class="ai-row"><span class="ai-lbl"><i class="ti ti-sparkles" style="font-size:11px;color:#378ADD"></i> Sugerencia:</span><span id="ai-s" class="ai-loading">Generando...</span><button class="ai-rbtn" onclick="refreshAi()" title="Regenerar"><i class="ti ti-refresh" style="font-size:10px"></i></button></div>`;
+            }
+            getAiSuggestion(sel,newMsgs);
+          }
+        }
+      }
+    }
+    donors=updated;
+    updateCounts(donors);renderList();
+  }catch(e){}
+  if(dot){dot.classList.remove('active')}
+}
+
+function appendMessages(msgs){
+  const chat=document.getElementById('chat');if(!chat)return;
+  const badge=document.getElementById('new-msg-badge');
+  const wasAtBottom=chat.scrollHeight-chat.scrollTop-chat.clientHeight<60;
+  msgs.forEach(m=>{
+    const cls=m.type==='donor'?'m-donor':m.type==='bot'?'m-bot':'m-human';
+    const bcls=m.type==='donor'?'bdonor':m.type==='bot'?'bbot':'bhuman';
+    const lbl=m.type==='donor'?`<div class="mlabel mlabel-r">Donante</div>`:m.type==='bot'?`<div class="mlabel"><i class="ti ti-robot" style="font-size:10px"></i> ${m.sender}</div>`:`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${m.sender}</div>`;
+    const el=document.createElement('div');
+    el.className=`msg ${cls}`;
+    el.innerHTML=`${lbl}<div class="bubble ${bcls}">${m.text}</div><div class="mtime${m.type==='donor'?' mtime-r':''}">${m.time}</div>`;
+    chat.appendChild(el);
+  });
+  if(wasAtBottom){chat.scrollTop=chat.scrollHeight}
+  else if(badge){badge.classList.add('show')}
+}
+
+function scrollToNew(){
+  const chat=document.getElementById('chat');if(chat)chat.scrollTop=chat.scrollHeight;
+  const badge=document.getElementById('new-msg-badge');if(badge)badge.classList.remove('show');
+}
+
+function startPolling(){
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(silentRefresh,30000);
+}
+
 if(!cfg().wl)setTimeout(openSettings,400);
 loadAll();
+startPolling();
 </script>
 </body>
 </html>
