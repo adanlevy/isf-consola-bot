@@ -317,6 +317,20 @@ function initials(n){return n.split(' ').map(x=>x[0]).join('').toUpperCase().sli
 function avatarColor(n){const c=[['#dbeafe','#1d4ed8'],['#dcfce7','#15803d'],['#fce7f3','#9d174d'],['#fef9c3','#854d0e'],['#f3e8ff','#7e22ce'],['#ffedd5','#c2410c']];return c[n.charCodeAt(0)%c.length]}
 function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
 function lastMsg(h){if(!h)return'';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return'';const m=last.match(/^\[[^\]]+\]\s+([^:]+):\s+(.+)$/s);return(m?m[2].trim():last).slice(0,60)}
+function lastMsgDate(h){
+  if(!h)return null;
+  const lines=h.trim().split('\n').filter(l=>l.trim());
+  for(let i=lines.length-1;i>=0;i--){
+    const m=lines[i].match(/^\[(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})\]/);
+    if(m){
+      const now=new Date();
+      const d=new Date(now.getFullYear(),parseInt(m[2])-1,parseInt(m[1]),parseInt(m[3]),parseInt(m[4]));
+      if(d>now)d.setFullYear(now.getFullYear()-1);
+      return d.toISOString();
+    }
+  }
+  return null;
+}
 function parseHist(s){
   if(!s)return[];
   const lines=s.split('\n');
@@ -431,7 +445,7 @@ function mapRecord(r){return{
   liberar_en:r.Whatsapp_Liberar_en__c,historial:r.WhatsApp_Historial_Archivo__c||'',
   nombre:r.npe03__Contact__r?.FirstName||'',
   ultimo_mensaje:lastMsg(r.WhatsApp_Historial_Archivo__c||''),
-  ultimo_envio:r.WhatsApp_UltimoEnvio__c||null
+  ultimo_envio:lastMsgDate(r.WhatsApp_Historial_Archivo__c||'')||r.WhatsApp_UltimoEnvio__c||null
 }}
 
 async function loadAll(){
@@ -459,7 +473,7 @@ function selectDonor(id){
   document.getElementById('si-int').textContent=sel.intentos||'0';
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
-  if(sel.estado==='derivado_humano'&&!isWindowExpired(sel.historial))getAiSuggestion(sel,msgs);
+
 }
 
 function actionsHtml(){
@@ -490,9 +504,8 @@ function inputAreaHtml(){
       <button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:15px"></i></button>
     </div>
     <div class="ai-row">
-      <span class="ai-lbl"><i class="ti ti-sparkles" style="font-size:11px;color:var(--isf)"></i> Sugerencia:</span>
-      <span id="ai-s" class="ai-loading">Generando...</span>
-      <button class="ai-rbtn" onclick="refreshAi()" title="Regenerar"><i class="ti ti-refresh" style="font-size:10px"></i></button>
+      <button class="ai-rbtn" onclick="requestAiSuggestion()" id="ai-btn" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--isf);color:var(--isf);background:var(--isf-light);font-size:11px;cursor:pointer;font-family:inherit"><i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta</button>
+      <span id="ai-s" style="display:none"></span>
     </div>
   </div>`;
 }
@@ -513,13 +526,13 @@ function renderConv(d,msgs){
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
           <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone}</div></div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
-          <span class="badge ${bc}" id="bot-badge"><i class="ti ${bi}" style="font-size:9px"></i> ${bt}</span>
-          ${d.liberar_en?`<span class="badge bot-resume"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
-        </div>
+        <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)" id="cat-badges">
+        <span class="badge ${bc}"><i class="ti ${bi}" style="font-size:9px"></i> ${bt}</span>
+        ${d.liberar_en?`<span class="badge bot-resume"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
+      </div>
     </div>
     <div class="chat" id="chat">${msgsHtml}</div>
     ${inputAreaHtml()}`;
@@ -541,7 +554,7 @@ async function doTake(){
   updateCounts(donors);renderList();
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
-  if(!isWindowExpired(sel.historial))getAiSuggestion(sel,msgs);
+
 }
 
 async function doSend(){
@@ -568,7 +581,7 @@ async function doSend(){
   inp.value='';inp.style.height='auto';inp.disabled=false;inp.focus();
   const chat=document.getElementById('chat');
   if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${text}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
-  getAiSuggestion(sel,parseHist(sel.historial));
+
 }
 
 async function doTemplate(){
@@ -613,22 +626,33 @@ async function doResolve(res){
 
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
 
-async function getAiSuggestion(d,msgs){
-  const el=document.getElementById('ai-s');if(!el)return;
-  el.className='ai-loading';el.textContent='Generando...';el.onclick=null;
+async function requestAiSuggestion(){
+  if(!sel)return;
+  const btn=document.getElementById('ai-btn');
+  const el=document.getElementById('ai-s');
+  if(!el)return;
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:11px"></i> Generando...';}
+  el.style.display='none';el.onclick=null;
   const c=cfg();
-  if(!c.wa){el.className='';el.style.color='var(--text-3)';el.textContent='Configurá el webhook wa para sugerencias.';return}
+  if(!c.wa){
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta';}
+    return;
+  }
+  const msgs=parseHist(sel.historial);
   const last=msgs.slice(-5).map(m=>`${m.sender}: ${m.text}`).join('\n');
   try{
-    const r=await fetch(c.wa,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:d.nombre,monto:String(d.monto||''),estado:d.estado,historial:last})});
+    const r=await fetch(c.wa,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:sel.nombre,monto:String(sel.monto||''),estado:sel.estado,historial:last})});
     const data=await r.json();
     const txt=data.suggestion;
-    if(!el.isConnected)return;
-    if(txt){el.className='ai-txt';el.textContent=txt;el.onclick=()=>{const i=document.getElementById('msg-input');if(i){i.value=txt;i.focus()}}}
-    else{el.className='';el.textContent='Sin sugerencia.'}
-  }catch(e){if(el.isConnected){el.className='';el.textContent='Error al obtener sugerencia.'}}
+    if(txt){
+      el.style.display='inline';el.className='ai-txt';el.textContent=txt;
+      el.onclick=()=>{const i=document.getElementById('msg-input');if(i){i.value=txt;i.focus();i.style.height='auto';i.style.height=i.scrollHeight+'px';}};
+      if(btn){btn.innerHTML='<i class="ti ti-refresh" style="font-size:11px"></i> Nueva sugerencia';btn.disabled=false;}
+    }
+  }catch(e){
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta';}
+  }
 }
-async function refreshAi(){if(!sel)return;getAiSuggestion(sel,parseHist(sel.historial))}
 
 function appendMessages(msgs){
   const chat=document.getElementById('chat');if(!chat)return;
@@ -689,8 +713,8 @@ async function handleNewMessage(donationId){
         appendMessages(added);
         if(added.some(m=>m.type==='donor')&&sel.estado==='derivado_humano'&&!isWindowExpired(sel.historial)){
           const ia=document.querySelector('.input-area');
-          if(ia&&ia.querySelector('.waiting-reply'))ia.innerHTML=`<div class="input-row"><textarea class="msg-ta" id="msg-input" rows="1" placeholder="Escribí tu respuesta..." onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:15px"></i></button></div><div class="ai-row"><span class="ai-lbl"><i class="ti ti-sparkles" style="font-size:11px;color:var(--isf)"></i> Sugerencia:</span><span id="ai-s" class="ai-loading">Generando...</span><button class="ai-rbtn" onclick="refreshAi()"><i class="ti ti-refresh" style="font-size:10px"></i></button></div>`;
-          getAiSuggestion(sel,newMsgs);
+          if(ia&&ia.querySelector('.waiting-reply'))ia.innerHTML=`<div class="input-row"><textarea class="msg-ta" id="msg-input" rows="1" placeholder="Escribí tu respuesta..." onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:15px"></i></button></div><div class="ai-row"><button class="ai-rbtn" onclick="requestAiSuggestion()" id="ai-btn" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--isf);color:var(--isf);background:var(--isf-light);font-size:11px;cursor:pointer;font-family:inherit"><i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta</button><span id="ai-s" style="display:none"></span></div>`;
+
         }
       }
       if(document.hidden)showNotif(fresh);
