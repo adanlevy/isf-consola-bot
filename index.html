@@ -143,6 +143,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<div class="overlay-wrap" id="liberate-overlay">
+  <div class="modal" style="width:340px">
+    <div class="modal-h"><span class="modal-title">Liberar episodio</span><button class="icon-btn" onclick="closeLiberateModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>El bot retomará a partir de esta fecha</label>
+        <input type="date" id="liberate-date" style="padding:7px 10px;font-size:13px;border:0.5px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);font-family:inherit">
+      </div>
+      <div style="font-size:11px;color:var(--text-2)">El bot retomará el outbound en el próximo ciclo a partir de esa fecha.</div>
+    </div>
+    <div class="modal-f">
+      <button class="btn" onclick="closeLiberateModal()">Cancelar</button>
+      <button class="btn btn-blue" onclick="confirmLiberate()"><i class="ti ti-check" style="font-size:12px"></i> Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="new-msg-badge" id="new-msg-badge" onclick="scrollToNew()">
   <i class="ti ti-arrow-down" style="font-size:13px"></i> Nuevo mensaje del donante
 </div>
@@ -154,6 +171,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="tab active" onclick="switchTab('derivado_humano',this)"><span class="tab-n" id="cnt-h">—</span>Humano</button>
         <button class="tab" onclick="switchTab('cerrado_negativo',this)"><span class="tab-n" id="cnt-n">—</span>Negativo</button>
         <button class="tab" onclick="switchTab('cerrado_positivo',this)"><span class="tab-n" id="cnt-p">—</span>Positivo</button>
+        <button class="tab" onclick="switchTab('programadas',this)"><span class="tab-n" id="cnt-pr">—</span>Program.</button>
       </div>
     </div>
     <div class="donor-list" id="donor-list"><div class="loading-msg"><i class="ti ti-loader" style="font-size:15px"></i> Cargando...</div></div>
@@ -250,11 +268,13 @@ function updateCounts(d){
   document.getElementById('cnt-h').textContent=d.filter(x=>x.estado==='derivado_humano').length;
   document.getElementById('cnt-n').textContent=d.filter(x=>x.estado==='cerrado_negativo').length;
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
+  const prEl=document.getElementById('cnt-pr');
+  if(prEl)prEl.textContent=d.filter(x=>x.liberar_en).length;
 }
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderList()}
 function renderList(){
   const list=document.getElementById('donor-list');
-  const filtered=donors.filter(d=>d.estado===tab);
+  const filtered=tab==='programadas'?donors.filter(d=>d.liberar_en):donors.filter(d=>d.estado===tab);
   if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-2)">Sin conversaciones en este estado</div>';return}
   list.innerHTML=filtered.map(d=>{
     const[pc,pi,pt]=pillInfo(d);const isSel=sel&&sel.id===d.id;
@@ -306,7 +326,7 @@ function actionsHtml(){
   const mn=nextMonthDate();
   return`
     ${sel.estado!=='derivado_humano'?`<button class="btn btn-blue" onclick="doTake()"><i class="ti ti-user-plus" style="font-size:11px"></i> Tomar conversación</button>`:''}
-    <button class="btn" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar para ${humanDate(mn)}</button>
+    <button class="btn" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar episodio</button>
     <button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Cerrar positivo</button>
     <button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Cerrar negativo</button>`;
 }
@@ -418,10 +438,21 @@ async function doTemplate(){
   if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${templateText}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
 }
 
-async function doLiberate(){
-  if(!sel)return;const c=cfg();const mn=nextMonthDate();
-  if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:mn})})}catch(e){}}
-  sel.liberar_en=mn;donors=donors.map(d=>d.id===sel.id?sel:d);updatePill();renderList();
+function doLiberate(){
+  if(!sel)return;
+  const mn=nextMonthDate();
+  document.getElementById('liberate-date').value=mn;
+  document.getElementById('liberate-overlay').classList.add('open');
+}
+function closeLiberateModal(){document.getElementById('liberate-overlay').classList.remove('open')}
+async function confirmLiberate(){
+  if(!sel)return;
+  const date=document.getElementById('liberate-date').value;
+  if(!date){alert('Seleccioná una fecha');return}
+  const c=cfg();
+  if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:date})})}catch(e){}}
+  sel.liberar_en=date;donors=donors.map(d=>d.id===sel.id?sel:d);
+  closeLiberateModal();updatePill();renderList();
 }
 
 async function doResolve(res){
@@ -453,7 +484,6 @@ async function getAiSuggestion(d,msgs){
 async function refreshAi(){if(!sel)return;getAiSuggestion(sel,parseHist(sel.historial))}
 
 // ── Polling automático ──────────────────────────────────────
-let pollTimer=null;
 let lastHistorial='';
 
 async function silentRefresh(){
@@ -524,14 +554,10 @@ function scrollToNew(){
   const badge=document.getElementById('new-msg-badge');if(badge)badge.classList.remove('show');
 }
 
-function startPolling(){
-  if(pollTimer)clearInterval(pollTimer);
-  pollTimer=setInterval(silentRefresh,30000);
-}
+
 
 if(!cfg().wl)setTimeout(openSettings,400);
 loadAll();
-startPolling();
 </script>
 </body>
 </html>
