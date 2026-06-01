@@ -310,7 +310,7 @@ function fmtTime(iso){
   const d=new Date(iso),now=new Date();
   const sameDay=d.toDateString()===now.toDateString();
   const yesterday=new Date(now-86400000).toDateString()===d.toDateString();
-  if(sameDay)return d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  if(sameDay)return d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false});
   if(yesterday)return'Ayer';
   if(now-d<7*86400000)return d.toLocaleDateString('es-AR',{weekday:'short'}).replace('.','');
   return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
@@ -391,7 +391,7 @@ function statusDotClass(e){
   return'sdot-pe';
 }
 
-const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
+const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
 function renderTabTags(){
   const el=document.getElementById('tab-tags');if(!el)return;
   const tags=TAB_TAGS[tab]||[];
@@ -535,10 +535,13 @@ function renderConv(d,msgs){
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
           <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone}</div></div>
         </div>
-        <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
+          ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
+        </div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
-      ${d.liberar_en?`<div style="margin-top:6px"><span class="badge bot-resume"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span></div>`:''}
+
     </div>
     <div class="chat" id="chat">${msgsHtml}</div>
     ${inputAreaHtml()}`;
