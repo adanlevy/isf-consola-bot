@@ -223,6 +223,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<div class="overlay-wrap" id="baja-overlay">
+  <div class="modal" style="width:420px">
+    <div class="modal-h"><span class="modal-title">Dar de baja en Salesforce</span><button class="icon-btn" onclick="closeBajaModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Motivo de Baja <span style="color:#dc2626">*</span></label>
+        <select id="baja-motivo" style="padding:8px 10px;font-size:13px;border:1px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);font-family:inherit;width:100%">
+          <option value="">-- Seleccioná un motivo --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Observaciones Baja</label>
+        <textarea id="baja-obs" rows="3" style="padding:8px 10px;font-size:13px;border:1px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);font-family:inherit;width:100%;resize:vertical" placeholder="Observaciones adicionales..."></textarea>
+      </div>
+      <div style="font-size:11px;color:var(--text-2);background:var(--bg-2);padding:8px 10px;border-radius:var(--r);border:1px solid var(--border)">
+        <i class="ti ti-info-circle" style="font-size:12px"></i> Esta acción dará de baja la donación en Salesforce. No se puede deshacer.
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-default" onclick="closeBajaModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="confirmBaja()"><i class="ti ti-user-minus" style="font-size:12px"></i> Confirmar baja</button>
+    </div>
+  </div>
+</div>
 <div class="topbar">
   <div class="topbar-brand">
     <img src="https://strapi.isf-argentina.org/uploads/logo_white_isf_baf06e5ddc.png"
@@ -375,7 +399,7 @@ function lastSenderIsOperator(historial){
 
 function pillInfo(d){
   if(d.estado==='derivado_humano')return['ph','ti-user','Con humano'];
-  if(d.estado==='cerrado_positivo')return['pp','ti-check','Cerrado positivo'];
+  if(d.estado==='cerrado_positivo')return['pp','ti-check','Cerrado positivo — chequear'];
   if(d.estado==='cerrado_negativo')return['pn','ti-x','Cerrado negativo'];
   if(d.estado==='en_conversacion')return['pec','ti-message-chatbot','Bot conversando'];
   if(d.estado==='primer_envio')return['pec','ti-send','Primer contacto'];
@@ -388,7 +412,7 @@ function botStatusBadge(d){
   return['bot-on','ti-robot','Maitena activa'];
 }
 
-const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-message-chatbot','Bot conversando'],['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
+const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo — chequear'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-message-chatbot','Bot conversando'],['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
 function switchToTab(t){
   const tabMap={'derivado_humano':0,'cerrado_negativo':1,'cerrado_positivo':2,'en_conversacion':3,'programadas':4,'primer_envio':5};
   const idx=tabMap[t];if(idx===undefined)return;
@@ -495,7 +519,8 @@ function actionsHtml(){
     ${sel.estado!=='derivado_humano'?`<button class="btn btn-blue" onclick="doTake()"><i class="ti ti-user-plus" style="font-size:11px"></i> Tomar</button>`:''}
     <button class="btn btn-default" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar</button>
     ${sel.estado!=='cerrado_positivo'?`<button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Positivo</button>`:''}
-    ${sel.estado!=='cerrado_negativo'?`<button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Negativo</button>`:''}`;
+    ${sel.estado!=='cerrado_negativo'?`<button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Negativo</button>`:''}
+    ${sel.estado==='cerrado_negativo'?`<button class="btn btn-red" style="opacity:0.85" onclick="openBajaModal()"><i class="ti ti-user-minus" style="font-size:11px"></i> Dar de baja en SF</button>`:''}`;
 }
 
 function inputAreaHtml(){
@@ -615,6 +640,33 @@ async function doTemplate(){
   if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${templateText}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
 }
 
+function openBajaModal(){
+  if(!sel)return;
+  document.getElementById('baja-motivo').value='';
+  document.getElementById('baja-obs').value='';
+  document.getElementById('baja-overlay').classList.add('open');
+}
+function closeBajaModal(){document.getElementById('baja-overlay').classList.remove('open')}
+async function confirmBaja(){
+  if(!sel)return;
+  const motivo=document.getElementById('baja-motivo').value;
+  if(!motivo){alert('Seleccioná un motivo de baja');return}
+  const obs=document.getElementById('baja-obs').value;
+  const c=cfg();
+  if(!c.wb){alert('Webhook de baja (wb) no configurado en el config.');return}
+  try{
+    await fetch(c.wb,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,motivo,observaciones:obs})});
+    closeBajaModal();
+    donors=donors.filter(d=>d.id!==sel.id);
+    sel=null;updateCounts(donors);renderList();
+    document.getElementById('conv').innerHTML='<div class="empty"><i class="ti ti-check" style="font-size:36px;color:var(--isf)"></i><span>Baja registrada en Salesforce</span></div>';
+  }catch(e){alert('Error al procesar la baja.');}
+}
+function populateBajaMotivos(opciones){
+  const el=document.getElementById('baja-motivo');if(!el)return;
+  el.innerHTML='<option value="">-- Seleccioná un motivo --</option>';
+  opciones.forEach(o=>el.innerHTML+=`<option value="${o}">${o}</option>`);
+}
 function doLiberate(){
   if(!sel)return;
   document.getElementById('liberate-date').value=nextMonthDate();
