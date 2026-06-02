@@ -86,7 +86,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ch-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px}
 .ch-id{display:flex;align-items:center;gap:10px}
 .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.cn{font-size:14px;font-weight:600}.cm{font-size:12px;color:var(--text-2);margin-top:1px}
+.cn{font-size:14px;font-weight:600}
+.conv-back{align-items:center;gap:8px;background:none;border:none;color:#fff;cursor:pointer;font-size:15px;padding:0;margin-right:8px}.cm{font-size:12px;color:var(--text-2);margin-top:1px}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500;border:1px solid;white-space:nowrap}
 .ph{background:#e8f4fc;color:var(--isf);border-color:#9ac8e8}.pp{background:#e8f8ee;color:#166534;border-color:#86efac}.pn{background:#fef2f2;color:#991b1b;border-color:#fca5a5}.pr{background:#fffbeb;color:#92400e;border-color:#fcd34d}.pec{background:#faf5ff;color:#7e22ce;border-color:#c4b5fd}
 .actions{display:flex;gap:5px;flex-wrap:wrap}
@@ -170,6 +171,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .setup-banner{background:#fff8e6;border:1px solid #fcd34d;border-radius:var(--r);padding:10px 14px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px;margin:12px}
 .loading-msg{display:flex;align-items:center;justify-content:center;padding:28px;color:var(--text-2);font-size:13px;gap:8px}
 .error-msg{padding:14px;font-size:12px;color:#dc2626}
+
+/* ── Responsive mobile ──────────────────────────────────────── */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;position:relative}
+  .sidebar{position:absolute;inset:0;z-index:10;transform:translateX(0);transition:transform 0.25s ease}
+  .sidebar.hidden{transform:translateX(-100%)}
+  .conv{position:absolute;inset:0;z-index:10;transform:translateX(100%);transition:transform 0.25s ease}
+  .conv.visible{transform:translateX(0)}
+  .conv-back{display:flex}
+  .sidebar-info{display:none!important}
+  .tabs{gap:2px}
+  .tab{font-size:9px;padding:4px 1px}
+  .tab-n{font-size:13px}
+  .tab-tags{padding:6px 10px}
+  .donor-card{padding:8px 12px}
+  .dc-avatar{width:40px;height:40px;font-size:12px}
+  .dc-name{font-size:13px}
+  .dc-preview{font-size:12px}
+  .conv-header{padding:8px 12px}
+  .cn{font-size:13px}
+  .actions{gap:4px}
+  .btn{padding:5px 8px;font-size:10px}
+  .chat{padding:10px 10px}
+  .msg{max-width:85%}
+  .bubble{font-size:13px;padding:7px 10px}
+  .input-area{padding:8px 10px}
+  .topbar{padding:0 12px}
+  .topbar-brand span{display:none}
+  .topbar-logo{height:22px}
+}
+@media(min-width:769px){
+  .conv-back{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -421,6 +455,10 @@ function botStatusBadge(d){
 }
 
 const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo — chequear'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-message-chatbot','Bot conversando'],['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
+function goBack(){
+  document.querySelector('.sidebar')?.classList.remove('hidden');
+  document.getElementById('conv')?.classList.remove('visible');
+}
 function switchToTab(t){
   const tabMap={'derivado_humano':0,'cerrado_negativo':1,'cerrado_positivo':2,'en_conversacion':3,'programadas':4,'primer_envio':5};
   const idx=tabMap[t];if(idx===undefined)return;
@@ -444,7 +482,7 @@ function updateCounts(d){
   const prEl=document.getElementById('cnt-pr');if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
   const peEl=document.getElementById('cnt-pe');if(peEl)peEl.textContent=d.filter(x=>x.estado==='primer_envio').length;
 }
-function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderTabTags();renderList()}
+function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderTabTags();renderList();if(window.innerWidth<=768)goBack();}
 
 function renderList(){
   const list=document.getElementById('donor-list');
@@ -507,6 +545,11 @@ async function loadAll(){
 
 function selectDonor(id){
   sel=donors.find(d=>d.id===id);if(!sel)return;
+  // Mobile: show conversation, hide sidebar
+  if(window.innerWidth<=768){
+    document.querySelector('.sidebar')?.classList.add('hidden');
+    document.getElementById('conv')?.classList.add('visible');
+  }
   unread.delete(id);unreadCount.delete(id);
   if(document.title.startsWith('(!)') && unread.size===0) document.title=document.title.replace('(!) ','');
   renderList();
@@ -571,6 +614,7 @@ function renderConv(d,msgs){
     <div class="conv-header">
       <div class="ch-top">
         <div class="ch-id">
+          <button class="conv-back" onclick="goBack()"><i class="ti ti-arrow-left"></i></button>
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
           <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone}</div></div>
         </div>
