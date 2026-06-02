@@ -174,10 +174,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* ── Responsive mobile ──────────────────────────────────────── */
 @media(max-width:768px){
-  .app{grid-template-columns:1fr;position:relative}
-  .sidebar{position:absolute;inset:0;z-index:10;transform:translateX(0);transition:transform 0.25s ease}
+  body{overflow:hidden;height:100dvh}
+  .app{grid-template-columns:1fr;position:relative;overflow:hidden;height:100%}
+  .sidebar{position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;
+    transform:translateX(0);transition:transform 0.25s ease;
+    display:flex;flex-direction:column;overflow:hidden}
   .sidebar.hidden{transform:translateX(-100%)}
-  .conv{position:absolute;inset:0;z-index:10;transform:translateX(100%);transition:transform 0.25s ease}
+  .conv{position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;
+    transform:translateX(100%);transition:transform 0.25s ease;
+    display:flex!important;flex-direction:column!important;overflow:hidden}
   .conv.visible{transform:translateX(0)}
   .conv-back{display:flex}
   .sidebar-info{display:none!important}
@@ -185,23 +190,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   .tab{font-size:9px;padding:4px 1px}
   .tab-n{font-size:13px}
   .tab-tags{padding:6px 10px}
+  .donor-list{flex:1;overflow-y:auto;min-height:0}
   .donor-card{padding:8px 12px}
   .dc-avatar{width:40px;height:40px;font-size:12px}
   .dc-name{font-size:13px}
   .dc-preview{font-size:12px}
-  .conv-header{padding:8px 12px;overflow-y:auto;max-height:40vh;flex-shrink:0}
+  .conv-header{padding:8px 12px;flex-shrink:0;overflow-y:auto;max-height:35vh}
   .cn{font-size:13px}
   .actions{gap:4px;flex-wrap:wrap}
   .btn{padding:5px 8px;font-size:10px}
-  .chat{padding:10px 10px;flex:1;min-height:0;overflow-y:auto}
+  .chat{padding:10px;flex:1!important;min-height:0;overflow-y:auto}
   .msg{max-width:85%}
-  .bubble{font-size:13px;padding:7px 10px}
-  .input-area{padding:8px 10px;flex-shrink:0;overflow-y:auto;max-height:45vh}
+  .bubble{font-size:13px;padding:7px 10px;white-space:pre-wrap}
+  .input-area{padding:8px 10px;flex-shrink:0;overflow-y:auto;max-height:40vh}
   .waiting-reply{font-size:12px}
-  .topbar{padding:0 12px}
-  .topbar-brand span{display:none}
-  .topbar-logo{height:22px}
-  .conv{display:flex!important;flex-direction:column!important;height:100%}
+  .topbar{padding:0 12px;height:46px}
+  .brand-title{display:none}
+  .topbar-logo{height:20px}
+  .pill{font-size:10px;padding:3px 7px}
+  .badge{font-size:9px;padding:2px 5px}
 }
 @media(min-width:769px){
   .conv-back{display:none!important}
@@ -299,7 +306,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes <span style="font-size:10px;opacity:0.6">v1.13</span></span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.13</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
