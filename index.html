@@ -615,12 +615,12 @@ function inputAreaHtml(){
   if(!canChat)return'';
   const expired=isWindowExpired(sel.historial);
   if(expired){
-    if(lastMessageIsTemplate(sel.historial))
-      return`<div class="input-area"><div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div></div>`;
-    return`<div class="input-area">
-      <div class="window-warning"><i class="ti ti-clock-exclamation" style="font-size:16px;flex-shrink:0"></i><div><strong>Ventana de 24hs vencida.</strong> Debés enviar el template de reapertura y esperar la respuesta antes de escribir libremente.</div></div>
-      <button class="btn btn-orange" style="width:100%;justify-content:center" onclick="doTemplate()"><i class="ti ti-send" style="font-size:12px"></i> Enviar template de reapertura</button>
-    </div>`;
+    const available=getAvailableTemplates(sel.historial);
+    const lastUsed=getLastUsedTemplate(sel.historial);
+    const lastTpl=lastUsed?TEMPLATES.find(t=>t.id===lastUsed):null;
+    const tplBtns=available.map(t=>`<button class="btn btn-orange" style="width:100%;justify-content:center;margin-bottom:5px;text-align:left;white-space:normal" onclick="doTemplate('${t.id}')"><i class="ti ti-send" style="font-size:12px;flex-shrink:0"></i> <span>${t.label}</span></button>`).join('');
+    const sentNote=lastTpl?`<div class="waiting-reply" style="margin-bottom:8px"><i class="ti ti-clock" style="font-size:14px;flex-shrink:0"></i> Último template enviado: "${lastTpl.label}". Podés enviar uno diferente:</div>`:'<div class="window-warning" style="margin-bottom:8px"><i class="ti ti-clock-exclamation" style="font-size:15px;flex-shrink:0"></i><div><strong>Ventana de 24hs vencida.</strong> Enviá un template para retomar.</div></div>';
+    return`<div class="input-area">${sentNote}${tplBtns}</div>`;
   }
   return`<div class="input-area">
     <div class="input-row">
