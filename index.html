@@ -433,10 +433,14 @@ function isWindowExpired(historial){
   if(msgDate>now)msgDate.setFullYear(now.getFullYear()-1);
   return(now-msgDate)>24*60*60*1000;
 }
-function lastSenderIsOperator(historial){
+function lastMessageIsTemplate(historial){
+  // Returns true ONLY if the last human message matches a known template text
+  const TEMPLATE_MARKERS=TEMPLATES.map(t=>t.marker);
   const msgs=parseHist(historial).filter(m=>m.text.trim());
   if(!msgs.length)return false;
-  return msgs[msgs.length-1].type==='human';
+  const last=msgs[msgs.length-1];
+  if(last.type!=='human')return false;
+  return TEMPLATE_MARKERS.some(marker=>last.text.includes(marker));
 }
 
 function pillInfo(d){
@@ -452,6 +456,36 @@ function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_posit
 function botStatusBadge(d){
   if(d.estado==='derivado_humano')return['bot-off','ti-robot-off','Maitena desactivada'];
   return['bot-on','ti-robot','Maitena activa'];
+}
+
+const TEMPLATES=[
+  {id:'t1',sid:'HXd9ea64e75370ff621eafa57d45e36e81',
+   label:'Quedó pendiente la conversación',
+   marker:'Quedó pendiente la conversación, te parece retomar?',
+   text:'Hola {nombre}, te escribe {operador} del equipo de ISF Argentina. Quedó pendiente la conversación, te parece retomar?'},
+  {id:'t2',sid:'HXa9784c0f8978e1ea543fb8776d976e7a',
+   label:'No pudimos terminar la conversación',
+   marker:'no pudimos terminar la conversación. Podés charlar un momento?',
+   text:'Hola {nombre}, te escribe {operador} de ISF Argentina. Hace unos días te escribimos y no pudimos terminar la conversación. Podés charlar un momento?'},
+  {id:'t3',sid:'HX5006ee74e3379b25fe6f36d37b32958f',
+   label:'No quería cerrar la conversación',
+   marker:'No quería cerrar la conversación sin que podamos comunicarnos.',
+   text:'Hola {nombre}, te escribe {operador} de ISF Argentina. No quería cerrar la conversación sin que podamos comunicarnos.'}
+];
+
+function getLastUsedTemplate(historial){
+  const msgs=parseHist(historial).filter(m=>m.type==='human');
+  for(let i=msgs.length-1;i>=0;i--){
+    for(const t of TEMPLATES){
+      if(msgs[i].text.includes(t.marker))return t.id;
+    }
+  }
+  return null;
+}
+
+function getAvailableTemplates(historial){
+  const lastId=getLastUsedTemplate(historial);
+  return TEMPLATES.filter(t=>t.id!==lastId);
 }
 
 const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo — chequear'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-message-chatbot','Bot conversando'],['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
@@ -581,7 +615,7 @@ function inputAreaHtml(){
   if(!canChat)return'';
   const expired=isWindowExpired(sel.historial);
   if(expired){
-    if(lastSenderIsOperator(sel.historial))
+    if(lastMessageIsTemplate(sel.historial))
       return`<div class="input-area"><div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div></div>`;
     return`<div class="input-area">
       <div class="window-warning"><i class="ti ti-clock-exclamation" style="font-size:16px;flex-shrink:0"></i><div><strong>Ventana de 24hs vencida.</strong> Debés enviar el template de reapertura y esperar la respuesta antes de escribir libremente.</div></div>
@@ -598,6 +632,12 @@ function inputAreaHtml(){
       <button class="ai-rbtn" onclick="requestAiSuggestion()" id="ai-btn" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--isf);color:var(--isf);background:var(--isf-light);font-size:11px;cursor:pointer;font-family:inherit"><i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta</button>
       <span id="ai-s" style="display:none"></span>
     </div>
+    <details style="margin-top:6px;font-size:11px">
+      <summary style="cursor:pointer;color:var(--text-2);list-style:none;display:flex;align-items:center;gap:4px"><i class="ti ti-send" style="font-size:11px"></i> Enviar template</summary>
+      <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+        ${getAvailableTemplates(sel.historial).map(t=>`<button class="btn btn-default" style="font-size:11px;text-align:left;white-space:normal" onclick="doTemplate('${t.id}')"><i class="ti ti-send" style="font-size:10px"></i> ${t.label}</button>`).join('')}
+      </div>
+    </details>
   </div>`;
 }
 
@@ -676,12 +716,13 @@ async function doSend(){
 
 }
 
-async function doTemplate(){
+async function doTemplate(templateId){
   if(!sel)return;const c=cfg();const op=c.op||'Equipo ISF';
-  const templateText=`Hola ${sel.nombre}, te escribe ${op} del equipo de ISF Argentina. Quedó pendiente la conversación, te parece retomar?`;
+  const tpl=TEMPLATES.find(t=>t.id===(templateId||'t1'))||TEMPLATES[0];
+  const templateText=tpl.text.replace('{nombre}',sel.nombre).replace('{operador}',op);
   const entry=`[${nowStr()}] ${op}: ${templateText}`;
   const updatedHistorial=(sel.historial?sel.historial+'\n':'')+entry;
-  if(c.wtr){try{await fetch(c.wtr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,phone:sel.phone,nombre:sel.nombre,operatorName:op,updatedHistorial})})}catch(e){}}
+  if(c.wtr){try{await fetch(c.wtr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,phone:sel.phone,nombre:sel.nombre,operatorName:op,templateSid:tpl.sid,templateText,updatedHistorial})})}catch(e){}}
   sel.historial=updatedHistorial;sel.ultimo_mensaje=templateText;sel.estado='derivado_humano';
   sel.ultimo_envio=new Date().toISOString();
   donors=donors.map(d=>d.id===sel.id?sel:d);
