@@ -138,6 +138,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ai-loading{color:var(--text-3);font-style:italic}
 .ai-rbtn{padding:2px 6px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-size:10px;margin-left:4px;font-family:inherit}
 .tpl-picker{position:relative;display:inline-block}
+.bottom-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;display:none;align-items:flex-end}
+.bottom-sheet-overlay.open{display:flex}
+.bottom-sheet{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-sheet-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg)}
+.bottom-sheet-title{font-size:14px;font-weight:600}
+.bottom-sheet-handle{width:40px;height:4px;background:var(--border-2);border-radius:99px;margin:0 auto 10px}
 .tpl-picker-menu{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--rl);box-shadow:0 4px 16px rgba(0,0,0,0.15);min-width:300px;max-height:60vh;overflow-y:auto;z-index:50;display:none}
 .tpl-picker-menu.open{display:block}
 .tpl-option{padding:10px 14px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);line-height:1.4;color:var(--text)}
@@ -315,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.15</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.16</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -324,6 +330,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<div class="bottom-sheet-overlay" id="tpl-bottom-sheet" onclick="e=>e.target===this&&closeTplPicker()">
+  <div class="bottom-sheet" onclick="event.stopPropagation()">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-header">
+      <span class="bottom-sheet-title">Elegí un template</span>
+      <button class="icon-btn" style="background:var(--bg-2);color:var(--text)" onclick="closeTplPicker()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="tpl-sheet-options"></div>
+  </div>
+</div>
 <div id="toast-container" style="position:fixed;top:60px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px"></div>
 <div class="new-msg-badge" id="new-msg-badge" onclick="scrollToNew()">
   <i class="ti ti-arrow-down" style="font-size:13px"></i> Nuevo mensaje
@@ -509,14 +525,28 @@ function getAvailableTemplates(historial){
 const TAB_TAGS={'derivado_humano':[['bh','ti-user','Con humano'],['bot-off','ti-robot-off','Maitena desactivada']],'cerrado_negativo':[['bn','ti-x','Cerrado negativo'],['bot-on','ti-robot','Maitena activa']],'cerrado_positivo':[['bp','ti-check','Cerrado positivo — chequear'],['bot-on','ti-robot','Maitena activa']],'en_conversacion':[['bec','ti-message-chatbot','Bot conversando'],['bot-on','ti-robot','Maitena activa']],'programadas':[['br','ti-calendar','Programada'],['bot-on','ti-robot','Maitena activa']],'primer_envio':[['bec','ti-send','Primer contacto'],['bot-on','ti-robot','Maitena activa']],};
 function toggleTplPicker(e){
   e.stopPropagation();
-  const m=document.getElementById('tpl-picker-menu');
-  if(m)m.classList.toggle('open');
+  if(window.innerWidth<=768){
+    // Mobile: bottom sheet
+    const sheet=document.getElementById('tpl-bottom-sheet');
+    const opts=document.getElementById('tpl-sheet-options');
+    if(!sheet||!opts)return;
+    // Populate options from nearest picker menu
+    const menu=e.target.closest('.tpl-picker')?.querySelector('.tpl-picker-menu');
+    if(menu)opts.innerHTML=menu.innerHTML;
+    sheet.classList.add('open');
+  } else {
+    // Desktop: dropdown
+    const m=e.target.closest('.tpl-picker')?.querySelector('.tpl-picker-menu');
+    if(m)m.classList.toggle('open');
+  }
 }
 function closeTplPicker(){
-  const m=document.getElementById('tpl-picker-menu');
-  if(m)m.classList.remove('open');
+  document.querySelectorAll('.tpl-picker-menu').forEach(m=>m.classList.remove('open'));
+  document.getElementById('tpl-bottom-sheet')?.classList.remove('open');
 }
-document.addEventListener('click',()=>closeTplPicker());
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.tpl-picker'))closeTplPicker();
+});
 function goBack(){
   document.querySelector('.sidebar')?.classList.remove('hidden');
   document.getElementById('conv')?.classList.remove('visible');
