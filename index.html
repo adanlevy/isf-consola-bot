@@ -189,17 +189,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   .dc-avatar{width:40px;height:40px;font-size:12px}
   .dc-name{font-size:13px}
   .dc-preview{font-size:12px}
-  .conv-header{padding:8px 12px}
+  .conv-header{padding:8px 12px;overflow-y:auto;max-height:40vh;flex-shrink:0}
   .cn{font-size:13px}
-  .actions{gap:4px}
+  .actions{gap:4px;flex-wrap:wrap}
   .btn{padding:5px 8px;font-size:10px}
-  .chat{padding:10px 10px}
+  .chat{padding:10px 10px;flex:1;min-height:0;overflow-y:auto}
   .msg{max-width:85%}
   .bubble{font-size:13px;padding:7px 10px}
-  .input-area{padding:8px 10px}
+  .input-area{padding:8px 10px;flex-shrink:0;overflow-y:auto;max-height:45vh}
+  .waiting-reply{font-size:12px}
   .topbar{padding:0 12px}
   .topbar-brand span{display:none}
   .topbar-logo{height:22px}
+  .conv{display:flex!important;flex-direction:column!important;height:100%}
 }
 @media(min-width:769px){
   .conv-back{display:none!important}
@@ -297,7 +299,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes <span style="font-size:10px;opacity:0.6">v1.12</span></span>
+    <span style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes <span style="font-size:10px;opacity:0.6">v1.13</span></span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -618,7 +620,8 @@ function inputAreaHtml(){
     const available=getAvailableTemplates(sel.historial);
     const lastUsed=getLastUsedTemplate(sel.historial);
     const lastTpl=lastUsed?TEMPLATES.find(t=>t.id===lastUsed):null;
-    const tplBtns=available.map(t=>`<button class="btn btn-orange" style="width:100%;justify-content:center;margin-bottom:5px;text-align:left;white-space:normal" onclick="doTemplate('${t.id}')"><i class="ti ti-send" style="font-size:12px;flex-shrink:0"></i> <span>${t.label}</span></button>`).join('');
+    const op=cfg().op||'el equipo';
+    const tplBtns=available.map(t=>{const txt=t.text.replace('{nombre}',sel.nombre).replace('{operador}',op);return`<button class="btn btn-orange" style="width:100%;margin-bottom:5px;text-align:left;white-space:normal;justify-content:flex-start" onclick="doTemplate('${t.id}')"><i class="ti ti-send" style="font-size:12px;flex-shrink:0;margin-right:6px"></i><span>${txt}</span></button>`;}).join('');
     const sentNote=lastTpl?`<div class="waiting-reply" style="margin-bottom:8px"><i class="ti ti-clock" style="font-size:14px;flex-shrink:0"></i> Último template enviado: "${lastTpl.label}". Podés enviar uno diferente:</div>`:'<div class="window-warning" style="margin-bottom:8px"><i class="ti ti-clock-exclamation" style="font-size:15px;flex-shrink:0"></i><div><strong>Ventana de 24hs vencida.</strong> Enviá un template para retomar.</div></div>';
     return`<div class="input-area">${sentNote}${tplBtns}</div>`;
   }
