@@ -706,13 +706,19 @@ async function confirmBaja(){
   const obs=document.getElementById('baja-obs').value;
   const c=cfg();
   if(!c.wb){alert('Webhook de baja (wb) no configurado en el config.');return}
+  // Deshabilitar botón para evitar doble ejecución
+  const btn=document.querySelector('#baja-overlay .btn-red');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:12px"></i> Procesando...';}
   try{
     await fetch(c.wb,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,motivo,observaciones:obs})});
     closeBajaModal();
     donors=donors.filter(d=>d.id!==sel.id);
     sel=null;updateCounts(donors);renderList();
     document.getElementById('conv').innerHTML='<div class="empty"><i class="ti ti-check" style="font-size:36px;color:var(--isf)"></i><span>Baja registrada en Salesforce</span></div>';
-  }catch(e){alert('Error al procesar la baja.');}
+  }catch(e){
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-user-minus" style="font-size:12px"></i> Confirmar baja';}
+    alert('Error al procesar la baja.');
+  }
 }
 function doLiberate(){
   if(!sel)return;
