@@ -138,7 +138,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ai-loading{color:var(--text-3);font-style:italic}
 .ai-rbtn{padding:2px 6px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-size:10px;margin-left:4px;font-family:inherit}
 .tpl-picker{position:relative;display:inline-block}
-.tpl-picker-menu{position:absolute;bottom:calc(100% + 6px);left:0;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--rl);box-shadow:0 4px 16px rgba(0,0,0,0.15);min-width:320px;z-index:50;overflow:hidden;display:none}
+.tpl-picker-menu{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--bg);border:1px solid var(--border-2);border-radius:var(--rl);box-shadow:0 4px 16px rgba(0,0,0,0.15);min-width:300px;max-height:60vh;overflow-y:auto;z-index:50;display:none}
 .tpl-picker-menu.open{display:block}
 .tpl-option{padding:10px 14px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);line-height:1.4;color:var(--text)}
 .tpl-option:last-child{border-bottom:none}
@@ -217,6 +217,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   .topbar-logo{height:20px}
   .pill{font-size:10px;padding:3px 7px}
   .badge{font-size:9px;padding:2px 5px}
+  .tpl-picker-menu{bottom:auto;top:calc(100% + 6px);max-height:50vh}
 }
 @media(min-width:769px){
   .conv-back{display:none!important}
@@ -314,7 +315,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.14</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.15</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -666,12 +667,10 @@ function inputAreaHtml(){
       <button class="ai-rbtn" onclick="requestAiSuggestion()" id="ai-btn" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--isf);color:var(--isf);background:var(--isf-light);font-size:11px;cursor:pointer;font-family:inherit"><i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta</button>
       <span id="ai-s" style="display:none"></span>
     </div>
-    <details style="margin-top:6px;font-size:11px">
-      <summary style="cursor:pointer;color:var(--text-2);list-style:none;display:flex;align-items:center;gap:4px"><i class="ti ti-send" style="font-size:11px"></i> Enviar template</summary>
-      <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
-        ${getAvailableTemplates(sel.historial).map(t=>`<button class="btn btn-default" style="font-size:11px;text-align:left;white-space:normal" onclick="doTemplate('${t.id}')"><i class="ti ti-send" style="font-size:10px"></i> ${t.label}</button>`).join('')}
-      </div>
-    </details>
+    <div class="tpl-picker" style="margin-top:6px">
+      <button class="ai-rbtn" style="display:flex;align-items:center;gap:4px" onclick="toggleTplPicker(event)"><i class="ti ti-send" style="font-size:11px"></i> Enviar template</button>
+      <div class="tpl-picker-menu" id="tpl-picker-menu">${getAvailableTemplates(sel.historial).map(t=>{const op2=cfg().op||'el equipo';const txt=t.text.replace('{nombre}',sel.nombre).replace('{operador}',op2);return`<div class="tpl-option" onclick="doTemplate('${t.id}');closeTplPicker()"><div class="tpl-option-label">${t.label}</div>${txt}</div>`;}).join('')}</div>
+    </div>
   </div>`;
 }
 
