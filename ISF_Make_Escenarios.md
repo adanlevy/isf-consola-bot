@@ -204,7 +204,10 @@ SELECT Id, ISFAR_Id_18_digitos__c,
        WhatsApp_Estado__c, WhatsApp_Intentos__c,
        WhatsApp_UltimoEnvio__c, WhatsApp_Liberar_En__c,
        WhatsApp_Historial_Archivo__c,
-       npe03__Date_Established__c
+       npe03__Date_Established__c,
+       Estado_Donante__c,
+       Fecha_modificacion_Nro_Tarjeta_o_CBU__c,
+       WhatsApp_FechaInicioEpisodio__c
 FROM npe03__Recurring_Donation__c
 WHERE npe03__Open_Ended_Status__c = 'Open'
   AND (
@@ -213,6 +216,8 @@ WHERE npe03__Open_Ended_Status__c = 'Open'
   )
 ORDER BY WhatsApp_UltimoEnvio__c DESC NULLS LAST
 ```
+**Decisión campos de recupero:** `Estado_Donante__c`, `Fecha_modificacion_Nro_Tarjeta_o_CBU__c` y `WhatsApp_FechaInicioEpisodio__c` se agregaron para que la plataforma pueda mostrar el badge "Recuperado" en positivos donde el donante ya actualizó sus datos de pago (Estado_Donante = Normal, o fecha de modificación de tarjeta/CBU posterior al inicio del episodio).
+
 **Decisión:** Incluye `en_conversacion` para monitoreo (ver qué hace el bot). Incluye `null + Liberar_En >= TODAY` para mostrar episodios "programados" (pausados hasta una fecha futura). `ORDER BY UltimoEnvio DESC` para mostrar la actividad más reciente primero.
 
 ---
