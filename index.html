@@ -321,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.19</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.20</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -595,14 +595,16 @@ function renderList(){
     const isSel=sel&&sel.id===d.id;
     const isUnread=unread.has(d.id);
     const cnt=unreadCount.get(d.id)||0;
-    const enc=isRecuperado(d);
-    return`<div class="donor-card${isSel?' sel':''}${isUnread?' unread':''}${enc?' enc':''}" onclick="selectDonor('${d.id}')" title="${enc?'Recuperado: donación regularizada':''}">
+    const badge=donorBadge(d);
+    const enc=badge!=='';
+    return`<div class="donor-card${isSel?' sel':''}${isUnread?' unread':''}${enc?' enc':''}" onclick="selectDonor('${d.id}')">
       <div class="dc-avatar" style="background:${avBg};color:${avFg};position:relative">${initials(d.name)}${enc?'<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#16a34a;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:8px;color:#fff"></i></span>':''}</div>
       <div class="dc-body">
         <div class="dc-top">
-          <div class="dc-name">${d.name}${enc?'<span style="display:inline-flex;align-items:center;gap:2px;margin-left:5px;background:#dcfce7;color:#15803d;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px;vertical-align:middle"><i class="ti ti-star-filled" style="font-size:8px"></i> Recuperado</span>':''}</div>
+          <div class="dc-name">${d.name}</div>
           <div class="dc-time">${fmtTime(d.ultimo_envio)}</div>
         </div>
+        ${enc?`<div style="margin:2px 0 3px">${badge}</div>`:''}
         <div class="dc-bottom">
           <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
           <div class="dc-right">
@@ -614,12 +616,15 @@ function renderList(){
   }).join('');
 }
 
+function donorBadge(d){
+  if(d.estado_donante==='Normal')
+    return'<span style="display:inline-flex;align-items:center;gap:2px;background:#dcfce7;color:#15803d;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-star-filled" style="font-size:8px"></i> Normal</span>';
+  if(d.fecha_mod_tarjeta&&d.fecha_inicio_episodio&&new Date(d.fecha_mod_tarjeta)>=new Date(d.fecha_inicio_episodio))
+    return'<span style="display:inline-flex;align-items:center;gap:2px;background:#dcfce7;color:#15803d;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-star-filled" style="font-size:8px"></i> Recuperado</span>';
+  return'';
+}
 function isRecuperado(d){
-  if(d.estado_donante==='Normal')return true;
-  if(d.fecha_mod_tarjeta&&d.fecha_inicio_episodio){
-    return new Date(d.fecha_mod_tarjeta)>=new Date(d.fecha_inicio_episodio);
-  }
-  return false;
+  return donorBadge(d)!=='';
 }
 
 function mapRecord(r){return{
@@ -738,7 +743,7 @@ function renderConv(d,msgs){
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
           ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
-          ${isRecuperado(d)?`<span class="badge" style="margin:0;background:#dcfce7;color:#15803d;border:1px solid #86efac"><i class="ti ti-star-filled" style="font-size:9px"></i> Recuperado</span>`:''}
+          ${donorBadge(d)}
         </div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
