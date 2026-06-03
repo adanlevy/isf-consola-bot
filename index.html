@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .donor-card.unread .dc-preview{color:var(--text);font-weight:500}
 .donor-card.unread .dc-time{color:var(--isf);font-weight:600}
 .dc-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-.dc-body{flex:1;min-width:0}
+.dc-body{flex:1;min-width:0;display:flex;flex-direction:column}
 .dc-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px}
 .dc-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .dc-time{font-size:11px;color:var(--text-2);flex-shrink:0}
@@ -321,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.20</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.21</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -690,6 +690,8 @@ function inputAreaHtml(){
   if(!canChat)return'';
   const expired=isWindowExpired(sel.historial);
   if(expired){
+    if(lastMessageIsTemplate(sel.historial))
+      return`<div class="input-area"><div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div></div>`;
     const available=getAvailableTemplates(sel.historial);
     const op=cfg().op||'el equipo';
     const tplOptions=available.map(t=>{
@@ -813,7 +815,7 @@ async function doTemplate(templateId){
   const ia=document.querySelector('.input-area');
   if(ia)ia.innerHTML=`<div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div>`;
   const chat=document.getElementById('chat');
-  if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${templateText}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
+  if(chat){const el=document.createElement('div');el.className='msg m-human';el.innerHTML=`<div class="mlabel"><span class="tpl-badge"><i class="ti ti-send" style="font-size:9px"></i> Template</span><i class="ti ti-user-check" style="font-size:10px"></i> ${op}</div><div class="bubble bhuman">${templateText}</div><div class="mtime">${nowStr()}</div>`;chat.appendChild(el);chat.scrollTop=chat.scrollHeight}
 }
 
 function openBajaModal(){
