@@ -152,7 +152,7 @@ cerrado_positivo / cerrado_negativo / null+fecha
 
 | Archivo | Descripción |
 |---|---|
-| `index.html` | Plataforma de gestión (v1.16) |
+| `index.html` | Plataforma de gestión (v1.18) |
 | `isf_config.json` | Template de configuración (sin credenciales reales) |
 | `make_anthropic_body_v3.json` | Body del módulo Anthropic para Maitena en Make |
 | `isf_bot_prompt_v1_4.md` | System prompt de Maitena |
