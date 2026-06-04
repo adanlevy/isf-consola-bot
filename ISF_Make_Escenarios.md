@@ -105,7 +105,10 @@ SELECT Id, ISFAR_Id_18_digitos__c,
        Reactivacion__c, WhatsApp_Estado__c, WhatsApp_Intentos__c,
        Estado_ltima_op_Cerrada__c,
        WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
-       WhatsApp_Liberar_En__c
+       WhatsApp_Liberar_En__c,
+       WhatsApp_Historial__c,
+       WhatsApp_Historial_Archivo__c,
+       npe03__Contact__r.Whatsapp_error__c
 FROM npe03__Recurring_Donation__c
 WHERE Estado_Donante__c = 'Rechazada'
   AND npe03__Open_Ended_Status__c = 'Open'
@@ -115,6 +118,7 @@ WHERE Estado_Donante__c = 'Rechazada'
   AND WhatsApp_Estado__c != 'cerrado_positivo'
   AND WhatsApp_Estado__c != 'en_conversacion'
   AND npe03__Contact__r.MobilePhone != null
+  AND npe03__Contact__r.Whatsapp_error__c = false
   AND (Reactivacion__c = null OR Reactivacion__c != 'Reactivado')
   AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
   AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -3); "YYYY-MM-DD")}}T00:00:00.000Z)
@@ -129,6 +133,10 @@ WHERE Estado_Donante__c = 'Rechazada'
   {{if(formatDate(now; "D") < 12; "AND Estado_ltima_op_Cerrada__c != 'Closed Won'"; "")}}
   AND npe03__Last_Payment_Date__c <= {{formatDate(addDays(addMonths(setDate(now; 1); -3); -1); "YYYY-MM-DD")}}
 ```
+
+**Decisión historial en outbound:** `WhatsApp_Historial__c` y `WhatsApp_Historial_Archivo__c` se traen para que el SF Update al final del escenario pueda hacer append del template enviado, igual que hace `wtr`. Así la plataforma muestra el historial completo incluyendo los intentos del outbound.
+
+**Decisión Whatsapp_error__c:** campo booleano en Contact. Se filtra `= false` para excluir donantes cuyo número no puede recibir mensajes de WhatsApp (error 63024 u otros). Se resetea automáticamente a false en SF cuando el operador modifica el teléfono del contacto.
 
 **Decisiones clave del SOQL:**
 
@@ -387,3 +395,9 @@ Todos en `npe03__Recurring_Donation__c`:
 | `Procesador_de_pagos__c` | Text | Se limpia al dar de baja |
 | `Reactivacion__c` | Picklist | Reactivado / Reactivación exitosa / fallida |
 | `Estado_ltima_op_Cerrada__c` | Text | Sin "u" — así está en SF |
+
+**Campos en Contact (`Contact`):**
+
+| Campo API | Tipo | Descripción |
+|---|---|---|
+| `Whatsapp_error__c` | Boolean | true si el número no puede recibir mensajes de WhatsApp (ej. error 63024). Se resetea a false automáticamente cuando se modifica el teléfono en SF. |
