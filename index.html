@@ -321,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.22</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.23</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -387,6 +387,7 @@ function toggleStats(e){
   if(pop.style.display!=='none'){pop.style.display='none';return;}
   const normal=donors.filter(d=>d.estado_donante==='Normal').length;
   const recuperado=donors.filter(d=>d.estado_donante!=='Normal'&&d.fecha_mod_tarjeta&&d.fecha_inicio_episodio&&new Date(d.fecha_mod_tarjeta)>=new Date(d.fecha_inicio_episodio)).length;
+  const sinEntrega=donors.filter(d=>d.whatsapp_error).length;
   const total=donors.length;
   pop.innerHTML=`
     <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Resumen de recupero</div>
@@ -398,6 +399,10 @@ function toggleStats(e){
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
         <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px"><i class="ti ti-star-filled" style="color:#15803d;font-size:11px"></i> Recuperados</span>
         <span style="font-size:18px;font-weight:700;color:#15803d">${recuperado}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px"><i class="ti ti-phone-off" style="color:#991b1b;font-size:11px"></i> Sin entrega</span>
+        <span style="font-size:18px;font-weight:700;color:#991b1b">${sinEntrega}</span>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:2px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;gap:16px">
         <span style="font-size:12px;color:var(--text-2)">Total en seguimiento</span>
@@ -625,14 +630,15 @@ function renderList(){
     const cnt=unreadCount.get(d.id)||0;
     const badge=donorBadge(d);
     const enc=badge!=='';
+    const errBadge=d.whatsapp_error?'<span style="display:inline-flex;align-items:center;gap:2px;background:#fef2f2;color:#991b1b;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-phone-off" style="font-size:8px"></i> Sin entrega</span>':'';
     return`<div class="donor-card${isSel?' sel':''}${isUnread?' unread':''}${enc?' enc':''}" onclick="selectDonor('${d.id}')">
-      <div class="dc-avatar" style="background:${avBg};color:${avFg};position:relative">${initials(d.name)}${enc?'<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#16a34a;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:8px;color:#fff"></i></span>':''}</div>
+      <div class="dc-avatar" style="background:${avBg};color:${avFg};position:relative">${initials(d.name)}${enc?'<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#16a34a;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="font-size:8px;color:#fff"></i></span>':d.whatsapp_error?'<span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:#dc2626;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-phone-off" style="font-size:8px;color:#fff"></i></span>':''}</div>
       <div class="dc-body">
         <div class="dc-top">
           <div class="dc-name">${d.name}</div>
           <div class="dc-time">${fmtTime(d.ultimo_envio)}</div>
         </div>
-        ${enc?`<div style="margin:2px 0 3px">${badge}</div>`:''}
+        ${enc?`<div style="margin:2px 0 3px">${badge}</div>`:errBadge?`<div style="margin:2px 0 3px">${errBadge}</div>`:''}
         <div class="dc-bottom">
           <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
           <div class="dc-right">
@@ -666,7 +672,8 @@ function mapRecord(r){return{
   ultimo_envio:lastMsgDate(r.WhatsApp_Historial_Archivo__c||'')||r.WhatsApp_UltimoEnvio__c||null,
   estado_donante:r.Estado_Donante__c||null,
   fecha_mod_tarjeta:r.Fecha_modificacion_Nro_Tarjeta_o_CBU__c||null,
-  fecha_inicio_episodio:r.WhatsApp_FechaInicioEpisodio__c||null
+  fecha_inicio_episodio:r.WhatsApp_FechaInicioEpisodio__c||null,
+  whatsapp_error:r.npe03__Contact__r?.Whatsapp_error__c||false
 }}
 
 async function loadAll(){
@@ -774,6 +781,7 @@ function renderConv(d,msgs){
           <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
           ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
           ${donorBadge(d)}
+          ${d.whatsapp_error?'<span style="display:inline-flex;align-items:center;gap:2px;background:#fef2f2;color:#991b1b;border-radius:99px;font-size:10px;font-weight:600;padding:2px 7px"><i class="ti ti-phone-off" style="font-size:9px"></i> Sin entrega</span>':''}
         </div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
