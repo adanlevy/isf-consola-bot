@@ -321,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.23</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.24</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -673,7 +673,7 @@ function mapRecord(r){return{
   estado_donante:r.Estado_Donante__c||null,
   fecha_mod_tarjeta:r.Fecha_modificacion_Nro_Tarjeta_o_CBU__c||null,
   fecha_inicio_episodio:r.WhatsApp_FechaInicioEpisodio__c||null,
-  whatsapp_error:r.npe03__Contact__r?.Whatsapp_error__c||false
+  whatsapp_error:r.npe03__Contact__r?.Whatsapp_Error__c||false
 }}
 
 async function loadAll(){
