@@ -321,7 +321,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.30</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.31</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -464,7 +464,7 @@ function linkify(text){
     return match;
   });
   // Regular URLs → truncated link
-  return text.replace(/(https?:\/\/[^\s<>"]+)/g,url=>{
+  return text.replace(/(https?:\/\/[^\s<>"\]]+)/g,url=>{
     const label=url.length>35?url.slice(0,35)+'…':url;
     return`<a href="${url}" target="_blank" rel="noopener" style="color:#0075bf;text-decoration:underline;text-underline-offset:2px;word-break:break-all" onclick="event.stopPropagation()" title="${url}">${label}</a>`;
   });
