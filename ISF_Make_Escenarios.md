@@ -124,7 +124,7 @@ WHERE
   AND (
     npe03__Last_Payment_Date__c = null
     OR npe03__Last_Payment_Date__c < {{formatDate(addMonths(setDate(now; 1); -2); "YYYY-MM-DD")}}
-    OR TODAY() >= {{formatDate(addDays(setDate(now; 1); 11); "YYYY-MM-DD")}}
+    OR TODAY >= {{formatDate(addDays(setDate(now; 1); 11); "YYYY-MM-DD")}}
   )
   AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
   AND (
