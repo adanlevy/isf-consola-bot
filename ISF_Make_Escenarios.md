@@ -105,12 +105,12 @@ SELECT Id, ISFAR_Id_18_digitos__c,
        Reactivacion__c, WhatsApp_Estado__c, WhatsApp_Intentos__c,
        Estado_ltima_op_Cerrada__c,
        WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
-       WhatsApp_Liberar_En__c,
-       WhatsApp_Historial__c,
-       WhatsApp_Historial_Archivo__c,
-       npe03__Contact__r.Whatsapp_error__c
+       WhatsApp_Liberar_En__c, WhatsApp_Historial__c,
+       WhatsApp_Historial_Archivo__c
 FROM npe03__Recurring_Donation__c
-WHERE Estado_Donante__c = 'Rechazada'
+WHERE
+  Estado_Donante__c = 'Rechazada'
+  AND npe03__Contact__r.Whatsapp_Error__c = false
   AND npe03__Open_Ended_Status__c = 'Open'
   AND No_llamar_callcenter__c = false
   AND WhatsApp_Estado__c != 'cerrado_negativo'
@@ -118,38 +118,41 @@ WHERE Estado_Donante__c = 'Rechazada'
   AND WhatsApp_Estado__c != 'cerrado_positivo'
   AND WhatsApp_Estado__c != 'en_conversacion'
   AND npe03__Contact__r.MobilePhone != null
-  AND npe03__Contact__r.Whatsapp_error__c = false
   AND (Reactivacion__c = null OR Reactivacion__c != 'Reactivado')
   AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
-  AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -3); "YYYY-MM-DD")}}T00:00:00.000Z)
+  AND npe03__Date_Established__c < THIS_MONTH
+  {{if(formatDate(now; "D") >= 15; ; "AND (npe03__Last_Payment_Date__c = null OR npe03__Last_Payment_Date__c < " + formatDate(setDate(addMonths(now; -1); 1); "YYYY-MM-DD") + ")")}}
+  AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
   AND (
     WhatsApp_FechaInicioEpisodio__c = null
-    OR WhatsApp_Intentos__c < 3
+    OR (
+      WhatsApp_Intentos__c < 3
+      AND WhatsApp_FechaInicioEpisodio__c >= {{formatDate(setDate(now; 1); "YYYY-MM-DD")}}
+    )
     OR (
       WhatsApp_FechaInicioEpisodio__c < {{formatDate(setDate(now; 1); "YYYY-MM-DD")}}
       AND WhatsApp_FechaInicioEpisodio__c < {{formatDate(addDays(now; -12); "YYYY-MM-DD")}}
     )
   )
-  {{if(formatDate(now; "D") < 12; "AND Estado_ltima_op_Cerrada__c != 'Closed Won'"; "")}}
-  AND npe03__Last_Payment_Date__c <= {{formatDate(addDays(addMonths(setDate(now; 1); -3); -1); "YYYY-MM-DD")}}
 ```
 
 **Decisión historial en outbound:** `WhatsApp_Historial__c` y `WhatsApp_Historial_Archivo__c` se traen para que el SF Update al final del escenario pueda hacer append del template enviado, igual que hace `wtr`. Así la plataforma muestra el historial completo incluyendo los intentos del outbound.
 
-**Decisión Whatsapp_error__c:** campo booleano en Contact. Se filtra `= false` para excluir donantes cuyo número no puede recibir mensajes de WhatsApp (error 63024 u otros). Se resetea automáticamente a false en SF cuando el operador modifica el teléfono del contacto.
+**Decisión Whatsapp_Error__c:** campo booleano en Contact. Se filtra `= false` para excluir donantes cuyo número no puede recibir mensajes de WhatsApp (error 63024 u otros). Se resetea automáticamente a false en SF cuando el operador modifica el teléfono del contacto.
 
 **Decisiones clave del SOQL:**
 
 - **`!= 'en_conversacion'`** — Excluido porque si el bot está en conversación activa, no tiene sentido interrumpir con un template outbound.
 - **`Reactivacion__c != 'Reactivado'`** — Evita contactar a donantes que ya actualizaron sus datos aunque el rechazo no se haya resuelto en SF aún.
 - **`WhatsApp_Liberar_En__c <= TODAY`** — Cuando el operador "libera un episodio" setea esta fecha para pausar el outbound. El SOQL solo incluye registros cuya fecha ya pasó.
-- **`WhatsApp_UltimoEnvio__c < 3 días`** — Previene envíos duplicados. Movido al SOQL desde el filtro F4 para reducir iteraciones.
+- **`Date_Established__c < THIS_MONTH`** — Excluye donaciones dadas de alta el mes en curso; aún no tuvieron un ciclo de cobro completo.
+- **`WhatsApp_UltimoEnvio__c < 4 días`** — Previene envíos duplicados. Movido al SOQL desde el filtro F4 para reducir iteraciones.
 - **Condición `effective_intentos` en SOQL** — Pre-filtra registros que no pasarían F3, reduciendo iteraciones:
   - `FechaInicioEpisodio = null` → episodio nuevo, siempre pasa
-  - `Intentos < 3` → pasa directamente
-  - `FechaInicio < 1ro del mes actual AND < 12 días atrás` → mes diferente + tiempo suficiente, se resetea
-- **Condición `Closed Won` días 1-11** — Si operación de cierre fue exitosa (`Closed Won`) y estamos antes del día 12, probablemente el cobro de este mes aún no procesó. Evita contactar a donantes que ya pagaron.
-- **`Last_Payment_Date <= 3 meses atrás`** — Tier 1: solo donantes con al menos 3 meses sin cobro.
+  - `Intentos < 3 AND FechaInicioEpisodio >= 1ro del mes` → episodio en curso este mes con intentos disponibles
+  - `FechaInicio < 1ro del mes actual AND < 12 días atrás` → mes diferente + tiempo suficiente, se trata como nuevo episodio
+  - Un episodio de un mes anterior con `Intentos < 3` NO entra por la segunda rama; solo entra si además cumple la tercera (12 días), en cuyo caso se resetea el contador.
+- **Condición dinámica `Last_Payment_Date`** — Antes del día 15: excluye cobros del mes pasado (solo procesa cobros de hace 2+ meses). Desde el día 15: incluye también los del mes pasado.
 
 ### effective_intentos (módulo 3 — Set Variable)
 ```
