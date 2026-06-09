@@ -121,7 +121,11 @@ WHERE
   AND (Reactivacion__c = null OR Reactivacion__c != 'Reactivado')
   AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
   AND npe03__Date_Established__c < THIS_MONTH
-  {{if(formatDate(now; "D") >= 15; ; "AND (npe03__Last_Payment_Date__c = null OR npe03__Last_Payment_Date__c < " + formatDate(setDate(addMonths(now; -1); 1); "YYYY-MM-DD") + ")")}}
+  AND (
+    npe03__Last_Payment_Date__c = null
+    OR npe03__Last_Payment_Date__c < {{formatDate(addMonths(startOfMonth(now); -2); "YYYY-MM-DD")}}
+    OR TODAY() >= {{formatDate(addDays(startOfMonth(now); 11); "YYYY-MM-DD")}}
+  )
   AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
   AND (
     WhatsApp_FechaInicioEpisodio__c = null
@@ -152,7 +156,7 @@ WHERE
   - `Intentos < 3 AND FechaInicioEpisodio >= 1ro del mes` → episodio en curso este mes con intentos disponibles
   - `FechaInicio < 1ro del mes actual AND < 12 días atrás` → mes diferente + tiempo suficiente, se trata como nuevo episodio
   - Un episodio de un mes anterior con `Intentos < 3` NO entra por la segunda rama; solo entra si además cumple la tercera (12 días), en cuyo caso se resetea el contador.
-- **Condición dinámica `Last_Payment_Date`** — Antes del día 15: excluye cobros del mes pasado (solo procesa cobros de hace 2+ meses). Desde el día 15: incluye también los del mes pasado.
+- **Condición `Last_Payment_Date`** — Si el último cobro fue el mes pasado o hace 2 meses, espera al día 12 del mes en curso para iniciar el ciclo. Cobros de hace 3+ meses entran sin restricción de día. `addDays(startOfMonth(now); 11)` = día 12 del mes actual.
 
 ### effective_intentos (módulo 3 — Set Variable)
 ```
