@@ -502,31 +502,6 @@ body.bot-genaro .genaro-only { display: flex; }
 }
 
 /* ─── Feedback area ─── */
-.feedback-row {
-  align-self: flex-start;
-  width: 100%;
-  max-width: 420px;
-  animation: fadeUp 0.2s ease;
-}
-.feedback-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--rl);
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.feedback-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
 .feedback-textarea {
   border: 1px solid var(--border-2);
   border-radius: var(--r);
@@ -535,8 +510,7 @@ body.bot-genaro .genaro-only { display: flex; }
   font-family: inherit;
   color: var(--text);
   background: var(--bg-2);
-  resize: vertical;
-  min-height: 54px;
+  resize: none;
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
@@ -547,6 +521,7 @@ body.bot-genaro .genaro-only { display: flex; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-top: 6px;
 }
 .feedback-excel-link {
   font-size: 11px;
@@ -557,11 +532,44 @@ body.bot-genaro .genaro-only { display: flex; }
   gap: 4px;
 }
 .feedback-excel-link:hover { text-decoration: underline; }
-.feedback-sent-msg {
-  font-size: 12px;
-  color: var(--text-3);
-  font-style: italic;
+.conv-feedback {
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  animation: fadeUp 0.15s ease;
 }
+.send-btn-sm {
+  background: var(--isf);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.send-btn-sm:hover { background: #007BB0; }
+.feedback-toggle-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  transition: background 0.15s, color 0.15s;
+}
+.feedback-toggle-btn.active { background: var(--isf); color: #fff; border-color: var(--isf); }
 
 /* ─── Chat input ─── */
 .chat-input-area {
@@ -804,8 +812,22 @@ body.bot-genaro .genaro-only { display: flex; }
     <!-- Messages -->
     <div class="messages" id="messages"></div>
 
+    <!-- Feedback de conversación (desplegable) -->
+    <div class="conv-feedback" id="conv-feedback" style="display:none">
+      <div class="conv-feedback-body" id="conv-feedback-body">
+        <textarea class="feedback-textarea" id="conv-fb-textarea" placeholder="Comentario sobre la conversación..." rows="2"></textarea>
+        <div class="feedback-actions">
+          <a id="conv-excel-link" href="#" target="_blank" class="feedback-excel-link" style="display:none"><i class="ti ti-table"></i> Ver Excel</a>
+          <button class="send-btn-sm" onclick="sendConvFeedback(this)"><i class="ti ti-send"></i> Enviar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Chat input -->
     <div class="chat-input-area">
+      <button class="feedback-toggle-btn" id="feedback-toggle-btn" onclick="toggleConvFeedback()" title="Feedback de esta conversación">
+        <i class="ti ti-message-dots"></i>
+      </button>
       <textarea
         class="chat-input"
         id="chat-input"
@@ -997,62 +1019,48 @@ function removeTypingIndicator() {
 }
 
 // ─── Feedback card ────────────────────────────────────────────────────────────
-function addFeedbackCard(botResponse) {
-  const container = document.getElementById('messages');
-  const cfg = loadConfig();
-
-  // Remove previous feedback cards if any
-  container.querySelectorAll('.feedback-row').forEach(el => el.remove());
-
-  const row = document.createElement('div');
-  row.className = 'feedback-row';
-
-  const excelHref = cfg.excelUrl
-    ? `<a href="${escapeAttr(cfg.excelUrl)}" target="_blank" class="feedback-excel-link">
-        <i class="ti ti-table"></i> Ver Excel de feedbacks
-       </a>`
-    : '<span></span>';
-
-  row.innerHTML = `
-    <div class="feedback-card">
-      <div class="feedback-title">
-        <i class="ti ti-message-dots"></i>
-        Feedback de esta respuesta
-      </div>
-      <textarea class="feedback-textarea" placeholder="Comentario sobre esta respuesta del bot..." id="fb-textarea-${Date.now()}"></textarea>
-      <div class="feedback-actions">
-        ${excelHref}
-        <button class="btn btn-primary btn-sm" onclick="sendFeedback(this, '${escapeAttr(botResponse)}')">
-          <i class="ti ti-send"></i> Enviar feedback
-        </button>
-      </div>
-    </div>`;
+function addFeedbackCard() {
+  // no-op: feedback is now conversation-level via the toggle button
+}
   container.appendChild(row);
   scrollToBottom();
 }
 
-async function sendFeedback(btn, botResponse) {
-  const card = btn.closest('.feedback-card');
-  const textarea = card.querySelector('textarea');
+function toggleConvFeedback() {
+  const panel = document.getElementById('conv-feedback');
+  const btn = document.getElementById('feedback-toggle-btn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('active', !isOpen);
+  if (!isOpen) {
+    const cfg = loadConfig();
+    const link = document.getElementById('conv-excel-link');
+    if (cfg.excelUrl) { link.href = cfg.excelUrl; link.style.display = 'flex'; }
+    else { link.style.display = 'none'; }
+    document.getElementById('conv-fb-textarea').focus();
+  }
+}
+
+async function sendConvFeedback(btn) {
+  const textarea = document.getElementById('conv-fb-textarea');
   const comment = textarea.value.trim();
   const cfg = loadConfig();
 
   if (!cfg.webhookUrl) {
-    textarea.placeholder = 'Configura una Webhook URL en la configuracion para enviar feedback.';
+    textarea.placeholder = 'Configurá una Webhook URL en Configuración.';
     return;
   }
 
-  const donorCtx = getDonorContext();
   const payload = {
     bot: currentBot,
     timestamp: new Date().toISOString(),
-    donante: donorCtx,
-    respuesta_bot: botResponse,
+    donante: getDonorContext(),
+    conversacion: messages.map(m => `[${m.role}] ${m.content}`).join('\n'),
     comentario: comment,
   };
 
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader ti-spin"></i> Enviando...';
+  btn.innerHTML = '<i class="ti ti-loader"></i> Enviando...';
 
   try {
     await fetch(cfg.webhookUrl, {
@@ -1060,11 +1068,22 @@ async function sendFeedback(btn, botResponse) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    card.querySelector('.feedback-actions').innerHTML = '<span class="feedback-sent-msg"><i class="ti ti-check"></i> Feedback enviado, gracias!</span>';
+    document.getElementById('conv-feedback-body').innerHTML =
+      '<div style="font-size:12px;color:var(--text-2);padding:4px 0"><i class="ti ti-check"></i> Feedback enviado. Gracias!</div>';
+    document.getElementById('feedback-toggle-btn').classList.remove('active');
+    setTimeout(() => {
+      document.getElementById('conv-feedback').style.display = 'none';
+      document.getElementById('conv-feedback-body').innerHTML = `
+        <textarea class="feedback-textarea" id="conv-fb-textarea" placeholder="Comentario sobre la conversación..." rows="2"></textarea>
+        <div class="feedback-actions">
+          <a id="conv-excel-link" href="#" target="_blank" class="feedback-excel-link" style="display:none"><i class="ti ti-table"></i> Ver Excel</a>
+          <button class="send-btn-sm" onclick="sendConvFeedback(this)"><i class="ti ti-send"></i> Enviar</button>
+        </div>`;
+    }, 2000);
   } catch (e) {
     btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-send"></i> Enviar feedback';
-    textarea.placeholder = 'Error al enviar. Verificar la Webhook URL.';
+    btn.innerHTML = '<i class="ti ti-send"></i> Enviar';
+    textarea.placeholder = 'Error al enviar. Verificá la Webhook URL.';
   }
 }
 
