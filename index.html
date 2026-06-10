@@ -1007,26 +1007,34 @@ function renderBajasStats(records){
   const s2=calcStats(prevMY);
   function monthLabel(my){
     const [y,m]=my.split('-').map(Number);
-    return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m-1]+' '+y;
+    return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m-1]+" '"+String(y).slice(2);
   }
-  function block(label,s){
-    return `<div style="flex:1;min-width:180px">
-      <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--text)">${label}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <tr><td style="padding:4px 0;color:var(--text)"><strong>Total bajas</strong></td><td style="text-align:right;font-weight:600;color:var(--text)">${s.total}</td></tr>
-        <tr><td style="padding:4px 0 4px 12px;color:var(--text-2)">├ Cobro antiguo (&gt; 3 meses)</td><td style="text-align:right;color:var(--text-2)">${s.cat1}</td></tr>
-        <tr><td style="padding:4px 0 4px 12px;color:var(--text-2)">└ Cobro reciente (≤ 3 meses)</td><td style="text-align:right;color:var(--text-2)">${s.cat2}</td></tr>
-        <tr><td style="padding:6px 0 4px 0;color:var(--text-2);border-top:1px solid var(--border)">↳ Con conversación WhatsApp</td><td style="text-align:right;color:var(--text-2);border-top:1px solid var(--border)">${s.cat3}</td></tr>
-      </table>
-    </div>`;
-  }
+  const s2l=monthLabel(prevMY), s1l=monthLabel(thisMY);
+  const rows=[
+    {label:'Total bajas',    v1:s1.total, v2:s2.total, bold:true},
+    {label:'Cobro antiguo (> 3 meses)', v1:s1.cat1, v2:s2.cat1},
+    {label:'Cobro reciente (≤ 3 meses)',v1:s1.cat2, v2:s2.cat2},
+    {label:'↳ Con conversación WA',     v1:s1.cat3, v2:s2.cat3, dim:true, sep:true},
+  ];
+  const trs=rows.map(r=>`<tr style="${r.sep?'border-top:1px solid var(--border)':''}">
+    <td style="padding:7px 8px 7px 0;font-size:12px;color:${r.dim?'var(--text-2)':'var(--text)'};${r.bold?'font-weight:600':''}">
+      ${r.label}
+    </td>
+    <td style="padding:7px 4px;text-align:center;font-size:13px;font-weight:${r.bold?700:500};color:${r.dim?'var(--text-2)':'var(--text)'};">${r.v2}</td>
+    <td style="padding:7px 0 7px 4px;text-align:center;font-size:13px;font-weight:${r.bold?700:500};color:${r.dim?'var(--text-2)':'var(--text)'};">${r.v1}</td>
+  </tr>`).join('');
   document.getElementById('bajas-modal-body').innerHTML=`
-    <div style="display:flex;gap:24px;flex-wrap:wrap">
-      ${block(monthLabel(thisMY)+' (este mes)',s1)}
-      <div style="width:1px;background:var(--border)"></div>
-      ${block(monthLabel(prevMY)+' (mes anterior)',s2)}
-    </div>
-    <div style="font-size:10px;color:var(--text-2);margin-top:14px">Cat. 1 y 2 son mutuamente excluyentes · Cat. 3 puede solapar con ambas</div>`;
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th style="text-align:left;font-size:11px;font-weight:500;color:var(--text-2);padding-bottom:8px"></th>
+          <th style="text-align:center;font-size:12px;font-weight:600;color:var(--text-2);padding-bottom:8px;min-width:64px">${s2l}</th>
+          <th style="text-align:center;font-size:12px;font-weight:600;color:var(--text);padding-bottom:8px;min-width:64px">${s1l}</th>
+        </tr>
+      </thead>
+      <tbody>${trs}</tbody>
+    </table>
+    <div style="font-size:10px;color:var(--text-2);margin-top:10px">Cobro antiguo y reciente son mutuamente excluyentes · ↳ WA puede solapar con ambos</div>`;
 }
 
 async function confirmLiberate(){
