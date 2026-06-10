@@ -78,6 +78,7 @@ FIRECRAWL (mensual)
 - **Resolver:** webhook `wr` → SF: cerrado_positivo o cerrado_negativo
 - **IA:** webhook `wa` → Claude genera sugerencia de respuesta
 - **Baja:** webhook `wb` → SF: cierra donación con motivo y fecha
+- **Stats bajas:** webhook `wbs` → SOQL SF → estadísticas del modal de bajas
 
 ---
 
@@ -117,6 +118,9 @@ cerrado_positivo / cerrado_negativo / null+fecha
 - **Regla crítica:** si `WhatsApp_Intentos__c = 0`, el donante escribió espontáneamente → NO mencionar el rechazo
 - **Retención:** empatía → impacto concreto → reducir monto → pausar (en ese orden)
 - **Identidad:** se presenta como persona real del equipo, nunca admite ser IA
+- **Cambio de monto:** se confirma en el chat sin formulario → tag `[ALERTA:cambio_monto]` → Make crea tarea para el equipo. El formulario es solo para cambio de medio de pago.
+- **Aporte extra puntual vs cambio permanente:** son flujos distintos. El aporte extra (único) deriva a humano. El cambio de monto permanente se resuelve en el chat con la alerta.
+- **Alertas disponibles:** `[ALERTA:emails]`, `[ALERTA:voluntario]`, `[ALERTA:cambio_monto]`, `[ALERTA:general]`
 
 ### Genaro (reactivación ex-donantes)
 - **Activa cuando:** `npe03__Open_Ended_Status__c = 'Closed'`
@@ -145,6 +149,7 @@ cerrado_positivo / cerrado_negativo / null+fecha
 - 3 templates de reapertura con rotación (no ofrece el último enviado)
 - Sugerencia IA a demanda (webhook `wa`)
 - Dar de baja en SF con motivo y observaciones
+- **Estadísticas de bajas** (botón ícono `user-minus` en topbar): modal con datos de este mes y mes anterior, desglosados en cobro antiguo (>3 meses), cobro reciente (≤3 meses) y bajas activas (motivo distinto a "Falta de respuesta y débitos rechazados"). Requiere webhook `wbs` configurado en ajustes.
 
 ---
 
@@ -152,9 +157,9 @@ cerrado_positivo / cerrado_negativo / null+fecha
 
 | Archivo | Descripción |
 |---|---|
-| `index.html` | Plataforma de gestión (v1.18) |
+| `index.html` | Plataforma de gestión (v1.35) |
 | `isf_config.json` | Template de configuración (sin credenciales reales) |
-| `make_anthropic_body_v3.json` | Body del módulo Anthropic para Maitena en Make |
+| `make_maitena_v3.4.json` | Body del módulo Anthropic para Maitena en Make |
 | `isf_bot_prompt_v1_4.md` | System prompt de Maitena |
 | `isf_bot_prompt_genaro_v1_1.md` | System prompt de Genaro |
 | `ISF_Make_Escenarios.md` | Documentación detallada de todos los escenarios Make |
@@ -165,11 +170,12 @@ cerrado_positivo / cerrado_negativo / null+fecha
 ## PENDIENTES PRIORITARIOS
 
 1. **Notificación al operador** — cuando llega mensaje nuevo (email o Pusher — parcialmente implementado)
-2. **Outbound Genaro** — escenario Make + templates + SOQL para ex-donantes
-3. **Bot de bienvenida** — nuevos donantes
-4. **SF Connected App** — reemplazar webhook `wl` por consulta directa a SF
-5. **Rate limiting / deduplicación** — robustez para mensajes duplicados de Twilio
-6. **Reset mensual automático** `cerrado_positivo` — escenario Make día 1
+2. **Escenario Make para `[ALERTA:cambio_monto]`** — detectar el tag en el inbound y crear tarea en SF/Notion con los datos del donante
+3. **Outbound Genaro** — escenario Make + templates + SOQL para ex-donantes
+4. **Bot de bienvenida** — nuevos donantes
+5. **SF Connected App** — reemplazar webhook `wl` por consulta directa a SF
+6. **Rate limiting / deduplicación** — robustez para mensajes duplicados de Twilio
+7. **Reset mensual automático** `cerrado_positivo` — escenario Make día 1
 
 ---
 
