@@ -140,19 +140,33 @@ html, body {
   flex-shrink: 0;
   background: var(--bg);
   border-right: 1px solid var(--border);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.left-panel::-webkit-scrollbar { width: 4px; }
-.left-panel::-webkit-scrollbar-track { background: transparent; }
-.left-panel::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
-
-.left-scroll {
-  padding: 14px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
 }
+
+/* Parte fija: bot switch + nueva conversación */
+.left-fixed {
+  flex-shrink: 0;
+  padding: 14px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+/* Parte scrolleable: solo datos del donante */
+.left-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 14px 24px;
+}
+.left-scroll::-webkit-scrollbar { width: 4px; }
+.left-scroll::-webkit-scrollbar-track { background: transparent; }
+.left-scroll::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
 
 /* ─── Bot Switch ─── */
 .bot-switch-card {
@@ -392,7 +406,7 @@ body.bot-genaro .genaro-only { display: flex; }
     border-right: none; border-bottom: none;
     display: none;
   }
-  .left-panel.mobile-active { display: block; }
+  .left-panel.mobile-active { display: flex; }
   .right-panel { display: none; }
   .right-panel.mobile-active { display: flex; }
   .msg-row { max-width: 88%; }
@@ -416,7 +430,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.7</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.8</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -478,9 +492,9 @@ body.bot-genaro .genaro-only { display: flex; }
 
   <!-- ─── Left Panel ─── -->
   <div class="left-panel" id="left-panel">
-    <div class="left-scroll">
 
-      <!-- Bot Switch -->
+    <!-- Fijo: bot switch + nueva conversación -->
+    <div class="left-fixed">
       <div class="bot-switch-card">
         <div class="bot-switch-label">Bot activo</div>
         <div class="bot-toggle">
@@ -494,8 +508,14 @@ body.bot-genaro .genaro-only { display: flex; }
           </button>
         </div>
       </div>
+      <button class="btn btn-secondary btn-full" onclick="resetConversation()">
+        <i class="ti ti-message-plus"></i>
+        Nueva conversación
+      </button>
+    </div>
 
-      <!-- Donor Data -->
+    <!-- Scrolleable: datos del donante -->
+    <div class="left-scroll">
       <div class="section-card">
         <div class="section-header">
           <i class="ti ti-user"></i>
@@ -548,14 +568,8 @@ body.bot-genaro .genaro-only { display: flex; }
           </div>
         </div>
       </div>
-
-      <!-- New conversation -->
-      <button class="btn btn-secondary btn-full" onclick="resetConversation()">
-        <i class="ti ti-message-plus"></i>
-        Nueva conversación
-      </button>
-
     </div>
+
   </div>
 
   <!-- ─── Right Panel — Chat ─── -->
