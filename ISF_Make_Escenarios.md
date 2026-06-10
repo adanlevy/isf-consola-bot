@@ -404,3 +404,55 @@ Todos en `npe03__Recurring_Donation__c`:
 | Campo API | Tipo | Descripción |
 |---|---|---|
 | `Whatsapp_error__c` | Boolean | true si el número no puede recibir mensajes de WhatsApp (ej. error 63024). Se resetea a false automáticamente cuando se modifica el teléfono en SF. |
+
+---
+
+## ESCENARIO — Feriados Argentina
+
+**Propósito:** Obtener los feriados nacionales del año en curso y del año siguiente desde una API pública y guardarlos en una org variable de Make. Se ejecuta una vez al año. El escenario outbound consulta esta variable para no enviar mensajes en días feriados.
+
+### Módulos
+
+| # | Tipo | Descripción |
+|---|---|---|
+| 1 | HTTP — Make a request | GET feriados del año actual |
+| 2 | HTTP — Make a request | GET feriados del año siguiente |
+| 3 | Make — Update a custom variable | Guarda ambos arrays en la org variable `Feriados` |
+
+### URLs de los requests
+
+**Módulo 1 — Año actual:**
+```
+GET https://api.argentinadatos.com/v1/feriados/{{formatDate(now; "YYYY")}}
+```
+
+**Módulo 2 — Año siguiente:**
+```
+GET https://api.argentinadatos.com/v1/feriados/{{parseNumber(formatDate(now; "YYYY")) + 1}}
+```
+
+La API devuelve un array de objetos con campo `fecha` en formato `YYYY-MM-DD`.
+
+### Módulo 3 — Update custom variable
+
+| Campo | Valor |
+|---|---|
+| Variable in organization/team | Organization |
+| Organization ID | ISF-Ar Integromat |
+| Variable name | `Feriados` |
+| Type | String |
+| Variable value | `1. Data[]` + `4. Data[]` (array de ambos requests concatenados) |
+
+### Filtro en escenario Outbound
+
+Entre el módulo 1 (SOQL) y el módulo 2, agregar un filtro:
+
+| Campo | Condición | Valor |
+|---|---|---|
+| Org variable `Feriados` | Does not contain | `{{formatDate(now; "YYYY-MM-DD")}}` |
+
+Si hoy es feriado, el escenario se detiene antes de procesar cualquier donante.
+
+### Schedule
+
+Ejecutar una vez al año, por ejemplo el **1ro de diciembre**, para tener los feriados del año siguiente listos antes de que empiece.
