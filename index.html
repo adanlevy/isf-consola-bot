@@ -978,10 +978,7 @@ async function openBajasStats(){
       }
       return;
     }
-    const records=(data[0]&&data[0].body&&data[0].body.records)||[];
-    console.log('[bajas] raw data:', JSON.stringify(data).slice(0,500));
-    console.log('[bajas] records count:', records.length);
-    if(records.length>0) console.log('[bajas] sample:', JSON.stringify(records[0]));
+    const records=(data.records)||(data[0]&&data[0].body&&data[0].body.records)||[];
     renderBajasStats(records);
   }catch(e){
     document.getElementById('bajas-modal-body').innerHTML='<div style="color:#dc2626;padding:16px">Error al cargar datos: '+e.message+'</div>';
