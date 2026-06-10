@@ -669,7 +669,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.1</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.2</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -1029,9 +1029,6 @@ function removeTypingIndicator() {
 // ─── Feedback card ────────────────────────────────────────────────────────────
 function addFeedbackCard() {
   // no-op: feedback is now conversation-level via the toggle button
-}
-  container.appendChild(row);
-  scrollToBottom();
 }
 
 function toggleConvFeedback() {
