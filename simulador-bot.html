@@ -289,10 +289,8 @@ body.bot-genaro .genaro-only { display: flex; }
 
 /* ─── Config section ─── */
 .config-toggle {
-  padding: 10px 14px;
+  padding: 10px 0;
   border-top: 1px solid var(--border);
-  background: var(--bg);
-  flex-shrink: 0;
 }
 .config-toggle-btn {
   width: 100%;
@@ -756,44 +754,44 @@ body.bot-genaro .genaro-only { display: flex; }
         </div>
       </div>
 
-    </div><!-- /left-scroll -->
+      <!-- New conversation button -->
+      <div style="padding-top:4px">
+        <button class="btn btn-secondary btn-full" onclick="resetConversation()">
+          <i class="ti ti-message-plus"></i>
+          Nueva conversacion
+        </button>
+      </div>
 
-    <!-- New conversation button -->
-    <div class="new-conv-area">
-      <button class="btn btn-secondary btn-full" onclick="resetConversation()">
-        <i class="ti ti-message-plus"></i>
-        Nueva conversacion
-      </button>
-    </div>
-
-    <!-- Config section -->
-    <div class="config-toggle">
-      <button class="config-toggle-btn" onclick="toggleConfig()">
-        <span style="display:flex;align-items:center;gap:5px;">
-          <i class="ti ti-settings"></i>
-          Configuracion
-        </span>
-        <i class="ti ti-chevron-down" id="config-chevron"></i>
-      </button>
-      <div class="config-panel" id="config-panel">
-        <div id="api-warning" class="api-warning" style="display:none">
-          <i class="ti ti-alert-triangle"></i>
-          <span>Ingresa una API Key de Anthropic para usar el simulador.</span>
-        </div>
-        <div class="field">
-          <label>API Key de Anthropic</label>
-          <input type="password" id="cfg-apikey" placeholder="sk-ant-..." oninput="saveConfig()">
-        </div>
-        <div class="field">
-          <label>Webhook URL (feedback)</label>
-          <input type="url" id="cfg-webhook" placeholder="https://..." oninput="saveConfig()">
-        </div>
-        <div class="field">
-          <label>URL del Excel de feedbacks</label>
-          <input type="url" id="cfg-excel" placeholder="https://..." oninput="saveConfig()">
+      <!-- Config section -->
+      <div class="config-toggle">
+        <button class="config-toggle-btn" onclick="toggleConfig()">
+          <span style="display:flex;align-items:center;gap:5px;">
+            <i class="ti ti-settings"></i>
+            Configuracion
+          </span>
+          <i class="ti ti-chevron-down" id="config-chevron"></i>
+        </button>
+        <div class="config-panel" id="config-panel">
+          <div id="api-warning" class="api-warning" style="display:none">
+            <i class="ti ti-alert-triangle"></i>
+            <span>Ingresa una API Key de Anthropic para usar el simulador.</span>
+          </div>
+          <div class="field">
+            <label>API Key de Anthropic</label>
+            <input type="password" id="cfg-apikey" placeholder="sk-ant-..." oninput="saveConfig()">
+          </div>
+          <div class="field">
+            <label>Webhook URL (feedback)</label>
+            <input type="url" id="cfg-webhook" placeholder="https://..." oninput="saveConfig()">
+          </div>
+          <div class="field">
+            <label>URL del Excel de feedbacks</label>
+            <input type="url" id="cfg-excel" placeholder="https://..." oninput="saveConfig()">
+          </div>
         </div>
       </div>
-    </div>
+
+    </div><!-- /left-scroll -->
 
   </div><!-- /left-panel -->
 
