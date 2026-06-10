@@ -46,8 +46,13 @@
   --wa-recv-text: #f3f4f6;
 }
 
-html, body {
+html {
   height: 100%;
+}
+body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg-2);
   color: var(--text);
@@ -110,7 +115,8 @@ html, body {
 /* ─── Layout ─── */
 .app {
   display: flex;
-  height: calc(100vh - 52px);
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -398,16 +404,17 @@ body.bot-genaro .genaro-only { display: flex; }
 
 /* ─── Responsive mobile ─── */
 @media (max-width: 680px) {
-  html, body { overflow: hidden; }
-  .app { flex-direction: column; height: calc(100vh - 52px - 40px); }
-  .mobile-tabs { display: block; height: 40px; }
+  /* body ya es flex column — app toma el espacio restante automáticamente */
+  .app { flex-direction: column; }
+  .mobile-tabs { display: block; flex-shrink: 0; }
   .left-panel {
-    width: 100%; min-width: 0; height: 100%;
+    width: 100%; min-width: 0;
     border-right: none; border-bottom: none;
     display: none;
+    flex: 1; min-height: 0;
   }
   .left-panel.mobile-active { display: flex; }
-  .right-panel { display: none; }
+  .right-panel { display: none; flex: 1; min-height: 0; }
   .right-panel.mobile-active { display: flex; }
   .msg-row { max-width: 88%; }
   .feedback-btn span { display: none; }
@@ -430,7 +437,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.8</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.9</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
