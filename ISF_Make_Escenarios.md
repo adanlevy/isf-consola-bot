@@ -455,4 +455,4 @@ Si hoy es feriado, el escenario se detiene antes de procesar cualquier donante.
 
 ### Schedule
 
-Ejecutar una vez al año, por ejemplo el **1ro de diciembre**, para tener los feriados del año siguiente listos antes de que empiece.
+Ejecutar el **día 1 de cada mes**. Aunque los feriados no cambian frecuentemente, la ejecución mensual cubre el caso de feriados puente o extraordinarios que el gobierno declare con poca anticipación.
