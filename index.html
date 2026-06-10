@@ -336,8 +336,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.36</span>
-  </div>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.37</span>  </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
     <button class="icon-btn" onclick="openBajasStats()" title="Estadísticas de bajas" id="bajas-btn"><i class="ti ti-user-minus"></i></button>
@@ -990,8 +989,7 @@ async function openBajasStats(){
       }
       return;
     }
-    const records=(data.records)||(data[0]&&data[0].body&&data[0].body.records)||[];
-    renderBajasStats(records);
+    const records=(data.records)||(data[0]&&data[0].body&&data[0].body.records)||[];    renderBajasStats(records);
   }catch(e){
     document.getElementById('bajas-modal-body').innerHTML='<div style="color:#dc2626;padding:16px">Error al cargar datos: '+e.message+'</div>';
   }
