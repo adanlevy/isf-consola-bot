@@ -968,7 +968,16 @@ async function openBajasStats(){
   document.getElementById('bajas-modal-body').innerHTML='<div style="text-align:center;padding:24px;color:var(--text-2)"><i class="ti ti-loader" style="font-size:20px"></i> Cargando...</div>';
   try{
     const res=await fetch(c.wbs,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trigger:true})});
-    const data=await res.json();
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text)}catch(e){
+      if(text.trim()==='Accepted'||text.trim()===''){
+        document.getElementById('bajas-modal-body').innerHTML='<div style="color:#92400e;background:#fef3c7;padding:12px 14px;border-radius:var(--r);font-size:12px"><strong>El webhook respondió sin datos.</strong><br>En Make, agregá un módulo <em>Webhook Response</em> al final del escenario con el JSON de respuesta.</div>';
+      }else{
+        document.getElementById('bajas-modal-body').innerHTML='<div style="color:#dc2626;padding:16px">Respuesta inesperada del webhook: '+text.slice(0,120)+'</div>';
+      }
+      return;
+    }
     const records=(data[0]&&data[0].body&&data[0].body.records)||[];
     renderBajasStats(records);
   }catch(e){
