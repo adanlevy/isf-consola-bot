@@ -950,7 +950,17 @@ function resetConversation() {
 function renderWelcome() {
   const container = document.getElementById('messages');
   container.innerHTML = '';
-  addSystemMsg('Escribi el primer mensaje como si fueras el donante.');
+  const botInitial = currentBot === 'maitena' ? 'M' : 'G';
+  if (currentBot === 'maitena') {
+    const ctx = getDonorContext();
+    const monto = ctx.monto_mensual ? `$${ctx.monto_mensual}` : 'tu donación mensual';
+    const medio = ctx.medio_de_pago || 'tu medio de pago';
+    const outbound = `Hola 👋 Soy Maitena del equipo de Ingeniería Sin Fronteras Argentina. Te escribimos porque tu donación mensual de ${monto} no pudo procesarse este mes con tu ${medio}. Podemos ayudarte a ponerlo al día? Tu apoyo hace posible que sigamos trabajando en comunidades rurales de todo el país 🙏`;
+    addBotBubble(outbound, botInitial);
+    messages.push({ role: 'assistant', content: outbound });
+  } else {
+    addSystemMsg('Escribi el primer mensaje como si fueras el ex-donante.');
+  }
 }
 
 // ─── System message ───────────────────────────────────────────────────────────
