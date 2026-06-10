@@ -32,3 +32,5 @@ bump_simulador() {
 
 bump_index
 bump_simulador
+
+exit 0
