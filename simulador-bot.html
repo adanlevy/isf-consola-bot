@@ -644,13 +644,12 @@ body.bot-genaro .genaro-only { display: flex; }
   .left-panel {
     width: 100%;
     min-width: 0;
-    height: auto;
-    max-height: 50vh;
+    height: 48vh;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
   .left-scroll { padding: 10px 10px 0; }
-  .right-panel { flex: 1; }
+  .right-panel { flex: 1; min-height: 0; }
   .msg-row { max-width: 88%; }
 }
 
@@ -670,7 +669,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.3</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.4</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -722,11 +721,11 @@ body.bot-genaro .genaro-only { display: flex; }
           </div>
           <div class="field">
             <label>Ultimo cobro exitoso</label>
-            <input type="text" id="f-ultimo-cobro" placeholder="ej: Mayo 2025">
+            <input type="text" id="f-ultimo-cobro" value="Abril 2025">
           </div>
           <div class="field">
             <label>Ultimos 4 digitos</label>
-            <input type="text" id="f-digitos" placeholder="ej: 4521" maxlength="4">
+            <input type="text" id="f-digitos" value="4521" maxlength="4">
           </div>
           <div class="field maitena-only">
             <label>Episodios previos de rechazo</label>
@@ -750,7 +749,7 @@ body.bot-genaro .genaro-only { display: flex; }
           </div>
           <div class="field genaro-only">
             <label>Fecha de baja</label>
-            <input type="text" id="f-fecha-baja" placeholder="ej: Enero 2025">
+            <input type="text" id="f-fecha-baja" value="Enero 2025">
           </div>
         </div>
       </div>
@@ -782,8 +781,8 @@ body.bot-genaro .genaro-only { display: flex; }
             <input type="password" id="cfg-apikey" placeholder="sk-ant-..." oninput="saveConfig()">
           </div>
           <div class="field">
-            <label>Webhook URL (feedback)</label>
-            <input type="url" id="cfg-webhook" placeholder="https://..." oninput="saveConfig()">
+            <label>Google Apps Script URL (feedback)</label>
+            <input type="url" id="cfg-webhook" placeholder="https://script.google.com/..." oninput="saveConfig()">
           </div>
           <div class="field">
             <label>URL del Excel de feedbacks</label>
@@ -1053,7 +1052,17 @@ async function sendConvFeedback(btn) {
   const cfg = loadConfig();
 
   if (!cfg.webhookUrl) {
-    textarea.placeholder = 'Configurá una Webhook URL en Configuración.';
+    document.getElementById('conv-feedback-body').innerHTML =
+      '<div style="font-size:12px;color:#b45309;padding:4px 0;display:flex;align-items:center;gap:5px"><i class="ti ti-alert-triangle"></i> Configurá la Google Apps Script URL en Configuración primero.</div>';
+    // Reopen after 3s
+    setTimeout(() => {
+      document.getElementById('conv-feedback-body').innerHTML = `
+        <textarea class="feedback-textarea" id="conv-fb-textarea" placeholder="Comentario sobre la conversación..." rows="2"></textarea>
+        <div class="feedback-actions">
+          <a id="conv-excel-link" href="#" target="_blank" class="feedback-excel-link" style="display:none"><i class="ti ti-table"></i> Ver Excel</a>
+          <button class="send-btn-sm" onclick="sendConvFeedback(this)"><i class="ti ti-send"></i> Enviar</button>
+        </div>`;
+    }, 3000);
     return;
   }
 
@@ -1070,8 +1079,10 @@ async function sendConvFeedback(btn) {
   btn.innerHTML = '<i class="ti ti-loader"></i> Enviando...';
 
   try {
+    // Google Apps Script requires no-cors; response is opaque but request goes through
     await fetch(cfg.webhookUrl, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
@@ -1090,7 +1101,8 @@ async function sendConvFeedback(btn) {
   } catch (e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-send"></i> Enviar';
-    textarea.placeholder = 'Error al enviar. Verificá la Webhook URL.';
+    textarea.value = comment;
+    textarea.placeholder = 'Error al enviar. Verificá la URL.';
   }
 }
 
