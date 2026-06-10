@@ -1,23 +1,34 @@
 #!/bin/bash
-# Auto-incrementa el patch version en index.html y simulador-bot.html
-# cuando alguno de esos archivos está en el staging area.
+# Auto-incrementa la versión en index.html (vX.Y) y simulador-bot.html (vX.Y.Z)
+# solo cuando el archivo está en el staging area.
 
-bump_patch() {
-  local file="$1"
-  local pattern="$2"
-  if ! git diff --cached --name-only | grep -q "$file"; then
-    return
-  fi
+bump_index() {
+  local file="index.html"
+  git diff --cached --name-only | grep -q "^$file$" || return
   local current
-  current=$(grep -oP "$pattern" "$file" | head -1)
-  if [ -z "$current" ]; then return; fi
+  current=$(grep -oP 'v\K[0-9]+\.[0-9]+(?=<)' "$file" | head -1)
+  [ -z "$current" ] && return
+  local major minor
+  IFS='.' read -r major minor <<< "$current"
+  local next="$major.$((minor + 1))"
+  sed -i "s/v$current/v$next/" "$file"
+  git add "$file"
+  echo "  bumped $file: v$current → v$next"
+}
+
+bump_simulador() {
+  local file="simulador-bot.html"
+  git diff --cached --name-only | grep -q "^$file$" || return
+  local current
+  current=$(grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' "$file" | head -1)
+  [ -z "$current" ] && return
   local major minor patch
   IFS='.' read -r major minor patch <<< "$current"
   local next="$major.$minor.$((patch + 1))"
-  sed -i "s/$current/$next/" "$file"
+  sed -i "s/v$current/v$next/" "$file"
   git add "$file"
-  echo "  bumped $file: $current → $next"
+  echo "  bumped $file: v$current → v$next"
 }
 
-bump_patch "index.html"      'v\K[0-9]+\.[0-9]+\.[0-9]+'
-bump_patch "simulador-bot.html" 'v\K[0-9]+\.[0-9]+\.[0-9]+'
+bump_index
+bump_simulador
