@@ -260,6 +260,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="field"><label>Resolver — wr</label><input type="text" id="cfg-wr" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Sugerencia IA — wa</label><input type="text" id="cfg-wa" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Dar de baja — wb</label><input type="text" id="cfg-wb" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Estadísticas de bajas — wbs</label><input type="text" id="cfg-wbs" placeholder="https://hook.make.com/..."></div>
       <div class="field-section">Tiempo real</div>
       <div class="field"><label>Pusher App Key</label><input type="text" id="cfg-pk" placeholder="tu Pusher App Key"></div>
     </div>
@@ -318,6 +319,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 </div>
+<div class="overlay-wrap" id="bajas-overlay">
+  <div class="modal" style="width:480px">
+    <div class="modal-h"><span class="modal-title">Estadísticas de bajas</span><button class="icon-btn" onclick="closeBajasStats()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body" id="bajas-modal-body">
+      <div style="text-align:center;padding:24px;color:var(--text-2)"><i class="ti ti-loader" style="font-size:20px"></i> Cargando...</div>
+    </div>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="topbar-brand">
     <img src="https://strapi.isf-argentina.org/uploads/logo_white_isf_baf06e5ddc.png"
@@ -330,6 +340,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
+    <button class="icon-btn" onclick="openBajasStats()" title="Estadísticas de bajas" id="bajas-btn"><i class="ti ti-user-minus"></i></button>
     <button class="icon-btn" onclick="toggleStats(event)" title="Estadísticas" id="stats-btn"><i class="ti ti-chart-bar"></i></button>
     <button class="icon-btn" onclick="loadAll()" title="Recargar"><i class="ti ti-refresh"></i></button>
     <button class="icon-btn" onclick="openSettings()" title="Configuración"><i class="ti ti-settings"></i></button>
@@ -422,13 +433,13 @@ function toggleStats(e){
 }
 function openSettings(){
   const c=cfg();
-  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
   document.getElementById('overlay').classList.add('open');
 }
 function closeSettings(){document.getElementById('overlay').classList.remove('open')}
 function saveSettings(){
   const c={};
-  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
   saveCfg(c);closeSettings();loadAll();if(c.pk)initPusher();
 }
 function loadConfigFile(e){
@@ -437,7 +448,7 @@ function loadConfigFile(e){
   r.onload=ev=>{
     try{
       const c=JSON.parse(ev.target.result);
-      ['op','wl','ws','wtr','wt','wli','wr','wa','wb','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
+      ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
       e.target.value='';
     }catch(err){alert('El archivo no es un JSON válido.');}
   };
@@ -948,6 +959,67 @@ function doLiberate(){
   document.getElementById('liberate-overlay').classList.add('open');
 }
 function closeLiberateModal(){document.getElementById('liberate-overlay').classList.remove('open')}
+
+function closeBajasStats(){document.getElementById('bajas-overlay').classList.remove('open')}
+async function openBajasStats(){
+  const c=cfg();
+  if(!c.wbs){alert('Configurá el webhook de estadísticas de bajas (wbs) en Configuración');return}
+  document.getElementById('bajas-overlay').classList.add('open');
+  document.getElementById('bajas-modal-body').innerHTML='<div style="text-align:center;padding:24px;color:var(--text-2)"><i class="ti ti-loader" style="font-size:20px"></i> Cargando...</div>';
+  try{
+    const res=await fetch(c.wbs,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trigger:true})});
+    const data=await res.json();
+    const records=(data[0]&&data[0].body&&data[0].body.records)||[];
+    renderBajasStats(records);
+  }catch(e){
+    document.getElementById('bajas-modal-body').innerHTML='<div style="color:#dc2626;padding:16px">Error al cargar datos: '+e.message+'</div>';
+  }
+}
+function renderBajasStats(records){
+  const now=new Date();
+  const thisMY=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevMY=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+  function getThreshold(my){
+    const [y,m]=my.split('-').map(Number);
+    const t=new Date(y,m-4,1);
+    return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-01';
+  }
+  function calcStats(my){
+    const recs=records.filter(r=>(r.Fecha_de_baja__c||'').startsWith(my));
+    const total=recs.length;
+    const thresh=getThreshold(my);
+    const cat1=recs.filter(r=>!r.npe03__Last_Payment_Date__c||r.npe03__Last_Payment_Date__c<thresh).length;
+    const cat2=recs.filter(r=>r.npe03__Last_Payment_Date__c&&r.npe03__Last_Payment_Date__c>=thresh).length;
+    const cat3=recs.filter(r=>r.WhatsApp_Historial__c&&(r.WhatsApp_FechaInicioEpisodio__c||'').startsWith(my)).length;
+    return {total,cat1,cat2,cat3};
+  }
+  const s1=calcStats(thisMY);
+  const s2=calcStats(prevMY);
+  function monthLabel(my){
+    const [y,m]=my.split('-').map(Number);
+    return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][m-1]+' '+y;
+  }
+  function block(label,s){
+    return `<div style="flex:1;min-width:180px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--text)">${label}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr><td style="padding:4px 0;color:var(--text)"><strong>Total bajas</strong></td><td style="text-align:right;font-weight:600;color:var(--text)">${s.total}</td></tr>
+        <tr><td style="padding:4px 0 4px 12px;color:var(--text-2)">├ Cobro antiguo (&gt; 3 meses)</td><td style="text-align:right;color:var(--text-2)">${s.cat1}</td></tr>
+        <tr><td style="padding:4px 0 4px 12px;color:var(--text-2)">└ Cobro reciente (≤ 3 meses)</td><td style="text-align:right;color:var(--text-2)">${s.cat2}</td></tr>
+        <tr><td style="padding:6px 0 4px 0;color:var(--text-2);border-top:1px solid var(--border)">↳ Con conversación WhatsApp</td><td style="text-align:right;color:var(--text-2);border-top:1px solid var(--border)">${s.cat3}</td></tr>
+      </table>
+    </div>`;
+  }
+  document.getElementById('bajas-modal-body').innerHTML=`
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      ${block(monthLabel(thisMY)+' (este mes)',s1)}
+      <div style="width:1px;background:var(--border)"></div>
+      ${block(monthLabel(prevMY)+' (mes anterior)',s2)}
+    </div>
+    <div style="font-size:10px;color:var(--text-2);margin-top:14px">Cat. 1 y 2 son mutuamente excluyentes · Cat. 3 puede solapar con ambas</div>`;
+}
+
 async function confirmLiberate(){
   if(!sel)return;
   const date=document.getElementById('liberate-date').value;
