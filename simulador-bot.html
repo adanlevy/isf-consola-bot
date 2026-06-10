@@ -118,24 +118,20 @@ html, body {
   flex-shrink: 0;
   background: var(--bg);
   border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  height: 100%;
 }
 
+.left-panel::-webkit-scrollbar { width: 4px; }
+.left-panel::-webkit-scrollbar-track { background: transparent; }
+.left-panel::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+
 .left-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   padding: 14px 14px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
-.left-scroll::-webkit-scrollbar { width: 4px; }
-.left-scroll::-webkit-scrollbar-track { background: transparent; }
-.left-scroll::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
 
 /* ─── Bot Switch ─── */
 .bot-switch-card {
@@ -648,8 +644,8 @@ body.bot-genaro .genaro-only { display: flex; }
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
-  .left-scroll { padding: 10px 10px 0; }
-  .right-panel { flex: 1; min-height: 0; }
+  .left-scroll { padding: 10px 10px 16px; }
+  .right-panel { flex: 1; overflow: hidden; }
   .msg-row { max-width: 88%; }
 }
 
@@ -669,7 +665,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.4</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.5</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
