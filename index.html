@@ -758,6 +758,18 @@ async function loadAll(){
 
 function selectDonor(id){
   sel=donors.find(d=>d.id===id);if(!sel)return;
+  // Si hay búsqueda activa, cambiar al tab correspondiente al donante
+  if(searchQuery){
+    const destTab=sel.liberar_en&&!sel.estado?'programadas':sel.estado||'derivado_humano';
+    if(destTab!==tab){
+      tab=destTab;
+      document.querySelectorAll('.tab').forEach(x=>{
+        const m=x.getAttribute('onclick')||'';
+        x.classList.toggle('active',m.includes("'"+destTab+"'"));
+      });
+      renderTabTags();
+    }
+  }
   // Mobile: show conversation, hide sidebar
   if(window.innerWidth<=768){
     document.querySelector('.sidebar')?.classList.add('hidden');
