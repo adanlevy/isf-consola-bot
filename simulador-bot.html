@@ -126,7 +126,7 @@ html, body {
 .left-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 14px 0;
+  padding: 14px 14px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1071,7 +1071,7 @@ async function sendFeedback(btn, botResponse) {
 // ─── Scroll ───────────────────────────────────────────────────────────────────
 function scrollToBottom() {
   const container = document.getElementById('messages');
-  container.scrollTop = container.scrollHeight;
+  requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1317,7 +1317,7 @@ async function sendMessage() {
         'Content-Type': 'application/json',
         'x-api-key': cfg.apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'output-128k-2025-02-19',
+        'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
