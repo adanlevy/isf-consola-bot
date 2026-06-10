@@ -1001,7 +1001,8 @@ function renderBajasStats(records){
     const cat1=recs.filter(r=>!r.npe03__Last_Payment_Date__c||r.npe03__Last_Payment_Date__c<thresh).length;
     const cat2=recs.filter(r=>r.npe03__Last_Payment_Date__c&&r.npe03__Last_Payment_Date__c>=thresh).length;
     const cat3=recs.filter(r=>r.WhatsApp_Historial__c&&(r.WhatsApp_FechaInicioEpisodio__c||'').startsWith(my)).length;
-    return {total,cat1,cat2,cat3};
+    const cat4=recs.filter(r=>r.Motivo_de_baja__c==='Falta de respuesta y débitos rechazados').length;
+    return {total,cat1,cat2,cat3,cat4};
   }
   const s1=calcStats(thisMY);
   const s2=calcStats(prevMY);
@@ -1014,7 +1015,8 @@ function renderBajasStats(records){
     {label:'Total bajas',    v1:s1.total, v2:s2.total, bold:true},
     {label:'Cobro antiguo (> 3 meses)', v1:s1.cat1, v2:s2.cat1},
     {label:'Cobro reciente (≤ 3 meses)',v1:s1.cat2, v2:s2.cat2},
-    {label:'↳ Con conversación WA',     v1:s1.cat3, v2:s2.cat3, dim:true, sep:true},
+    {label:'↳ Con conversación WA',      v1:s1.cat3, v2:s2.cat3, dim:true, sep:true},
+    {label:'↳ Baja pasiva (sin respuesta)',v1:s1.cat4, v2:s2.cat4, dim:true},
   ];
   const trs=rows.map(r=>`<tr style="${r.sep?'border-top:1px solid var(--border)':''}">
     <td style="padding:7px 8px 7px 0;font-size:12px;color:${r.dim?'var(--text-2)':'var(--text)'};${r.bold?'font-weight:600':''}">
@@ -1034,7 +1036,7 @@ function renderBajasStats(records){
       </thead>
       <tbody>${trs}</tbody>
     </table>
-    <div style="font-size:10px;color:var(--text-2);margin-top:10px">Cobro antiguo y reciente son mutuamente excluyentes · ↳ WA puede solapar con ambos</div>`;
+    <div style="font-size:10px;color:var(--text-2);margin-top:10px">Cobro antiguo y reciente son mutuamente excluyentes · ↳ pueden solapar con ambos</div>`;
 }
 
 async function confirmLiberate(){
