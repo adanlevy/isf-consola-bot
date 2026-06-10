@@ -1,0 +1,23 @@
+#!/bin/bash
+# Auto-incrementa el patch version en index.html y simulador-bot.html
+# cuando alguno de esos archivos está en el staging area.
+
+bump_patch() {
+  local file="$1"
+  local pattern="$2"
+  if ! git diff --cached --name-only | grep -q "$file"; then
+    return
+  fi
+  local current
+  current=$(grep -oP "$pattern" "$file" | head -1)
+  if [ -z "$current" ]; then return; fi
+  local major minor patch
+  IFS='.' read -r major minor patch <<< "$current"
+  local next="$major.$minor.$((patch + 1))"
+  sed -i "s/$current/$next/" "$file"
+  git add "$file"
+  echo "  bumped $file: $current → $next"
+}
+
+bump_patch "index.html"      'v\K[0-9]+\.[0-9]+\.[0-9]+'
+bump_patch "simulador-bot.html" 'v\K[0-9]+\.[0-9]+\.[0-9]+'
