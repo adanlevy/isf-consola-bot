@@ -18,7 +18,7 @@
   --recv:#ffffff;--recv-text:#111b21;
   --human-bubble:#cce4f7;--human-text:#0a3d62;
 }
-@media(prefers-color-scheme:dark){:root{
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#111b21;--bg-2:#202c33;--bg-3:#0d1418;
   --text:#e9edef;--text-2:#8696a0;--text-3:#667781;
   --border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.15);
@@ -26,6 +26,14 @@
   --recv:#202c33;--recv-text:#e9edef;
   --human-bubble:#1a3a52;--human-text:#cce4f7;
 }}
+:root[data-theme="dark"]{
+  --bg:#111b21;--bg-2:#202c33;--bg-3:#0d1418;
+  --text:#e9edef;--text-2:#8696a0;--text-3:#667781;
+  --border:rgba(255,255,255,0.08);--border-2:rgba(255,255,255,0.15);
+  --sent:#005c4b;--sent-text:#e9edef;
+  --recv:#202c33;--recv-text:#e9edef;
+  --human-bubble:#1a3a52;--human-text:#cce4f7;
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-2);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* Topbar */
@@ -339,10 +347,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.41</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· ISF-Bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.42</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
+    <button class="icon-btn" onclick="toggleTheme()" title="Cambiar tema" id="theme-btn"><i class="ti ti-moon"></i></button>
     <button class="icon-btn" onclick="openBajasStats()" title="Estadísticas de bajas" id="bajas-btn"><i class="ti ti-user-minus"></i></button>
     <button class="icon-btn" onclick="toggleStats(event)" title="Estadísticas" id="stats-btn"><i class="ti ti-chart-bar"></i></button>
     <button class="icon-btn" onclick="loadAll()" title="Recargar"><i class="ti ti-refresh"></i></button>
@@ -405,6 +414,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 const CK='isf_conv_v4';
 let donors=[],tab='derivado_humano',sel=null,unread=new Set(),unreadCount=new Map(),searchQuery='',viewMode='rechazos';
+function applyTheme(t){
+  document.documentElement.dataset.theme=t;
+  const icon=document.querySelector('#theme-btn i');
+  if(icon)icon.className=t==='dark'?'ti ti-sun':'ti ti-moon';
+}
+function toggleTheme(){
+  const cur=document.documentElement.dataset.theme;
+  const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const isDark=cur?cur==='dark':sysDark;
+  const next=isDark?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem('isf_theme',next)}catch(e){}
+}
+(function(){
+  let saved;try{saved=localStorage.getItem('isf_theme')}catch(e){}
+  if(saved)applyTheme(saved);
+  else{
+    const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const icon=document.querySelector('#theme-btn i');
+    if(icon)icon.className=sysDark?'ti ti-sun':'ti ti-moon';
+  }
+})();
 function scopedDonors(){
   return donors.filter(d=>{
     if(viewMode==='reactivacion'){
