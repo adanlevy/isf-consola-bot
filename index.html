@@ -347,7 +347,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.44</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.45</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -765,7 +765,7 @@ function renderList(){
           <div class="dc-name">${d.name}</div>
           <div class="dc-time">${fmtTime(d.ultimo_envio)}</div>
         </div>
-        ${enc?`<div style="margin:2px 0 3px">${badge}</div>`:errBadge?`<div style="margin:2px 0 3px">${errBadge}</div>`:''}
+        ${enc||errBadge?`<div style="margin:2px 0 3px;display:flex;gap:3px;flex-wrap:wrap">${badge}${errBadge}</div>`:''}
         <div class="dc-bottom">
           <div class="dc-preview">${d.ultimo_mensaje||'Sin mensajes'}</div>
           <div class="dc-right">
