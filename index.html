@@ -299,6 +299,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<div class="overlay-wrap" id="bulk-liberate-overlay">
+  <div class="modal" style="width:360px">
+    <div class="modal-h"><span class="modal-title">Liberar en masa — Iniciados</span><button class="icon-btn" onclick="closeBulkLiberate()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div id="bulk-liberate-summary" style="font-size:13px;color:var(--text);line-height:1.6"></div>
+      <div class="field" style="margin-top:4px">
+        <label>Liberar a partir de</label>
+        <input type="date" id="bulk-liberate-date" style="padding:8px 10px;font-size:13px;border:1px solid var(--border-2);border-radius:var(--r);background:var(--bg-2);color:var(--text);font-family:inherit;width:100%">
+      </div>
+      <div style="font-size:11px;color:var(--text-2)">El bot retomará el outbound a partir de esa fecha para cada donante liberado.</div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-default" onclick="closeBulkLiberate()">Cancelar</button>
+      <button class="btn btn-blue" onclick="confirmBulkLiberate()"><i class="ti ti-checks" style="font-size:12px"></i> Liberar todos</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay-wrap" id="baja-overlay">
   <div class="modal" style="width:420px">
     <div class="modal-h"><span class="modal-title">Dar de baja en Salesforce</span><button class="icon-btn" onclick="closeBajaModal()"><i class="ti ti-x"></i></button></div>
@@ -347,7 +365,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.47</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.48</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -388,7 +406,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="tab" onclick="switchTab('cerrado_positivo',this)"><span class="tab-n" id="cnt-p">—</span>Positivo</button>
         <button class="tab" onclick="switchTab('en_conversacion',this)"><span class="tab-n" id="cnt-ec">—</span>En conv.</button>
         <button class="tab" onclick="switchTab('programadas',this)"><span class="tab-n" id="cnt-pr">—</span>Program.</button>
-        <button class="tab" onclick="switchTab('primer_envio',this)"><span class="tab-n" id="cnt-pe">—</span>Iniciados</button>
+        <button class="tab" id="tab-iniciados" onclick="switchTab('primer_envio',this)" oncontextmenu="openBulkLiberate(event)" data-longpress="0"><span class="tab-n" id="cnt-pe">—</span>Iniciados</button>
       </div>
     </div>
     <div class="tab-tags" id="tab-tags"></div>
@@ -1122,6 +1140,48 @@ async function confirmLiberate(){
   sel.liberar_en=date;sel.estado=null;donors=donors.map(d=>d.id===sel.id?sel:d);
   closeLiberateModal();updateCounts(donors);switchToTab('programadas');renderConv(sel,parseHist(sel.historial));
 }
+
+// ─── Bulk liberate ───────────────────────────────────────────────────────────
+function hasBulkTag(d){return donorBadge(d)!==''||!!d.whatsapp_error}
+function bulkTargets(){
+  return scopedDonors().filter(d=>(d.estado==='primer_envio'||d.estado==='reactivacion')&&hasBulkTag(d));
+}
+function openBulkLiberate(e){
+  e.preventDefault();
+  const targets=bulkTargets();
+  if(!targets.length){alert('No hay donantes con tag en Iniciados.');return}
+  const next=new Date();next.setMonth(next.getMonth()+1);next.setDate(1);
+  const iso=next.toISOString().slice(0,10);
+  document.getElementById('bulk-liberate-date').value=iso;
+  document.getElementById('bulk-liberate-summary').innerHTML=
+    `Se liberarán <strong>${targets.length}</strong> donantes de Iniciados que tienen tag (Normal, Recuperado o Sin entrega).`;
+  document.getElementById('bulk-liberate-overlay').classList.add('open');
+}
+function closeBulkLiberate(){document.getElementById('bulk-liberate-overlay').classList.remove('open')}
+async function confirmBulkLiberate(){
+  const date=document.getElementById('bulk-liberate-date').value;
+  if(!date){alert('Seleccioná una fecha');return}
+  const targets=bulkTargets();
+  const c=cfg();
+  const btn=document.querySelector('#bulk-liberate-overlay .btn-blue');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:12px"></i> Liberando...';}
+  for(const d of targets){
+    if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:d.id,liberarEn:date})})}catch(e){}}
+    d.liberar_en=date;d.estado=null;
+  }
+  donors=donors.map(d=>{const t=targets.find(x=>x.id===d.id);return t||d;});
+  closeBulkLiberate();
+  if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-checks" style="font-size:12px"></i> Liberar todos';}
+  updateCounts(donors);switchToTab('programadas');renderList();
+}
+// Long-press for mobile
+(function(){
+  const el=document.getElementById('tab-iniciados');if(!el)return;
+  let timer=null;
+  el.addEventListener('touchstart',()=>{timer=setTimeout(()=>openBulkLiberate({preventDefault:()=>{}}),600)},{passive:true});
+  el.addEventListener('touchend',()=>{if(timer){clearTimeout(timer);timer=null;}});
+  el.addEventListener('touchmove',()=>{if(timer){clearTimeout(timer);timer=null;}});
+})();
 
 async function doResolve(res){
   if(!sel)return;const c=cfg();
