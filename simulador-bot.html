@@ -438,7 +438,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.15</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.16</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -836,7 +836,7 @@ async function sendConvFeedback(btn) {
     rating: '',
     comment: comment,
     sfState: sfState,
-    conversation: messages.map(m => `[${m.role === 'user' ? 'DONANTE' : 'BOT'}] ${m.content}`).join('\n'),
+    conversation: messages.map(m => `[${m.role === 'user' ? 'DONANTE' : (currentBot === 'genaro' ? 'GENARO' : 'BOT')}] ${m.content}`).join('\n'),
   };
 
   try {
