@@ -186,8 +186,9 @@ WHERE
 | # | Tipo | Descripción |
 |---|---|---|
 | 1 | Salesforce — Make an API Call | SOQL ex-donantes elegibles |
-| 2 | Iterator | Itera sobre cada registro |
-| F4 | Filter | UltimoEnvio < 4 días O no existe |
+| AGG | Tools — Array Aggregator | Dedup por donante (1 donación por contacto) |
+| 2 | Iterator | Itera sobre cada grupo dedupeado |
+| F-estado | Filter | Filtra episodios de Genaro recientes con estado vivo |
 | 3 | Tools — Set Variable | Calcula `effective_intentos` (reset a 180 días) |
 | F3 | Filter | `effective_intentos < 2` (solo 2 templates) |
 | 6 | HTTP — Twilio | Envía template con ContentSid según intento |
@@ -205,47 +206,72 @@ WHERE
 - `WhatsApp_Estado__c = 'reactivacion'` — marca el episodio outbound de Genaro (lo distingue del flujo de rechazos de Maitena).
 - `WhatsApp_Intentos__c` — `0` → template 1, `1` → template 2.
 - `WhatsApp_FechaInicioEpisodio__c` — base para calcular los +7 días y el cooldown de 6 meses.
-- `WhatsApp_UltimoEnvio__c` — anti-duplicado (igual que en rechazos).
+- `WhatsApp_UltimoEnvio__c` — anti-duplicado (umbral de 8 días, no 4 como rechazos).
 
 ### SOQL Outbound (módulo 1)
 ```sql
 SELECT Id, ISFAR_Id_18_digitos__c,
-       npe03__Contact__r.FirstName, npe03__Contact__r.MobilePhone,
+       npe03__Contact__r.FirstName, npe03__Contact__r.LastName,
+       npe03__Contact__r.MobilePhone, npe03__Contact__c,
        npe03__Amount__c, Medio_de_pago__c,
        npe03__Date_Established__c, Fecha_de_baja__c,
-       Estado_ltima_op_Cerrada__c,
+       Estado_Donante__c, Estado_ltima_op_Cerrada__c,
        WhatsApp_Estado__c, WhatsApp_Intentos__c,
        WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
        WhatsApp_Liberar_En__c, WhatsApp_Historial__c,
        WhatsApp_Historial_Archivo__c
 FROM npe03__Recurring_Donation__c
 WHERE
-  npe03__Open_Ended_Status__c = 'Closed'
+  Estado_Donante__c = 'Ex-Donante'
   AND npe03__Contact__r.Whatsapp_Error__c = false
-  AND No_llamar_callcenter__c = false
   AND npe03__Contact__r.MobilePhone != null
   AND WhatsApp_Estado__c != 'cerrado_negativo'
-  AND WhatsApp_Estado__c != 'cerrado_positivo'
-  AND WhatsApp_Estado__c != 'derivado_humano'
-  AND WhatsApp_Estado__c != 'en_conversacion'
+  AND Fecha_de_baja__c < LAST_N_MONTHS:6
   AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
-  AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
+  AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -8); "YYYY-MM-DD")}}T00:00:00.000Z)
   AND (
     WhatsApp_FechaInicioEpisodio__c = null
-    OR (
-      WhatsApp_Intentos__c < 2
-      AND WhatsApp_FechaInicioEpisodio__c >= {{formatDate(addDays(now; -14); "YYYY-MM-DD")}}
-    )
+    OR WhatsApp_Intentos__c < 2
     OR WhatsApp_FechaInicioEpisodio__c < {{formatDate(addDays(now; -180); "YYYY-MM-DD")}}
   )
+ORDER BY npe03__Contact__c, Fecha_de_baja__c DESC NULLS LAST
+LIMIT 50
 ```
 
 **Diferencias clave respecto al SOQL de Maitena:**
-- **`npe03__Open_Ended_Status__c = 'Closed'`** — apunta a donaciones cerradas (ex-donantes), no a `Estado_Donante__c = 'Rechazada'`.
+- **`Estado_Donante__c = 'Ex-Donante'`** — apunta a ex-donantes (no a `'Rechazada'`). Reemplaza a `npe03__Open_Ended_Status__c = 'Closed'`, que era redundante.
+- **Sin `No_llamar_callcenter__c`** — ese filtro es de operaciones de cobro, no aplica a reactivación.
+- **`WhatsApp_Estado__c != 'cerrado_negativo'` es el ÚNICO filtro de estado en el SOQL** — un "no" explícito de un ex-donante es doble churn (se fue y rechazó el reintento) → **permanente, no se vuelve a contactar nunca**, sin importar la antigüedad del episodio. El resto de estados (`derivado_humano`, `en_conversacion`) NO se filtran acá porque dependen de comparar dos fechas (ver filtro de Make abajo). `cerrado_positivo` no se filtra porque `Estado_Donante = 'Ex-Donante'` ya lo excluye (si reactivó, dejó de ser ex-donante).
+- **`Fecha_de_baja__c < LAST_N_MONTHS:6`** — no contactar a quien se dio de baja hace menos de 6 meses. Mismo criterio que el cooldown.
+- **`WhatsApp_UltimoEnvio__c < hace 8 días`** — anti-duplicado. 8 días (no 4 como Maitena) para dar holgura a la cadencia de +7.
 - **`WhatsApp_Intentos__c < 2`** — solo 2 templates (Maitena usa 3).
-- **Reset a 180 días** — la tercera rama del `OR` reabre el episodio recién a los 6 meses, no a los 12 días. Un ex-donante no es urgente como un cobro rechazado.
-- **Ventana de episodio en curso = 14 días** — `FechaInicioEpisodio >= hace 14 días` cubre los 2 toques (día 0 y +7) con margen. Pasados los 14 días sin completar, el episodio se considera vencido y solo reabre con la regla de 180 días.
-- **Sin condición de `Last_Payment_Date`** — no aplica el umbral del ciclo de cobro mensual de Maitena; reactivación no depende del calendario de cobros.
+- **Reset a 180 días** — la tercera rama del `OR` reabre el episodio recién a los 6 meses.
+- **Dedup por donante** — `ORDER BY npe03__Contact__c, Fecha_de_baja__c DESC` + Array Aggregator (ver abajo) para quedarse con una sola donación por donante: la de baja más reciente.
+- **Sin condición de `Last_Payment_Date`** — no aplica el ciclo de cobro mensual de Maitena.
+
+### Dedup por donante (módulo AGG — Array Aggregator)
+Un donante puede tener varias donaciones recurrentes cerradas. Queremos procesar solo la de **baja más reciente**.
+
+- SOQL no puede traer "una fila por grupo quedándose con la más nueva" (`GROUP BY` solo da agregados). Se resuelve en Make.
+- El `ORDER BY npe03__Contact__c, Fecha_de_baja__c DESC NULLS LAST` deja, dentro de cada donante, la baja más reciente primera.
+- **Array Aggregator** con **Group by = `npe03__Contact__c`** agrupa por donante. El primer elemento de cada grupo es la baja más reciente.
+- En los módulos siguientes se referencia `{{array[1].campo}}` (Make indexa desde 1).
+
+### Filtro de estado (F-estado — entre Iterator y Set Variable)
+SOQL no puede comparar `WhatsApp_FechaInicioEpisodio__c` contra `Fecha_de_baja__c` (dos campos de fecha). Este filtro distingue de qué "era" es el episodio:
+- **`inicio <= baja`** → episodio viejo de Maitena (ocurrió antes/durante la baja). Su estado no aplica a reactivación → **dejar pasar**.
+- **`inicio > baja`** → episodio de Genaro (post-baja). Si es reciente (< 180 días) y está `derivado_humano` o `en_conversacion` → todavía vivo o en cooldown → **bloquear**. Si superó los 180 días → stale → reabrir.
+
+**El bundle PASA si CUALQUIERA de estas 4 es verdadera (OR):**
+
+| # | Campo | Operador | Valor |
+|---|---|---|---|
+| 1 | `WhatsApp_FechaInicioEpisodio__c` | Does not exist | *(vacío)* |
+| 2 | `WhatsApp_Estado__c` | Does not equal `derivado_humano` **AND** Does not equal `en_conversacion` | *(misma fila, dos condiciones AND)* |
+| 3 | `WhatsApp_FechaInicioEpisodio__c` | Less than or equal to | `{{2.Fecha_de_baja__c}}` |
+| 4 | `WhatsApp_FechaInicioEpisodio__c` | Less than | `{{formatDate(addDays(now; -180); "YYYY-MM-DD")}}` |
+
+Si ninguna se cumple, el registro se descarta (caso a bloquear: episodio de Genaro + reciente + estado vivo).
 
 ### effective_intentos (módulo 3 — Set Variable)
 ```
