@@ -347,7 +347,8 @@ SELECT Id, ISFAR_Id_18_digitos__c,
        Fecha_modificacion_Nro_Tarjeta_o_CBU__c,
        WhatsApp_FechaInicioEpisodio__c,
        npe03__Date_Established__c,
-       npe03__Open_Ended_Status__c
+       npe03__Open_Ended_Status__c,
+       Fecha_de_baja__c
 FROM npe03__Recurring_Donation__c
 WHERE (
     npe03__Open_Ended_Status__c = 'Open'
@@ -363,7 +364,7 @@ ORDER BY WhatsApp_UltimoEnvio__c DESC NULLS LAST
 
 **Decisión:** Incluye `en_conversacion` para monitoreo (ver qué hace el bot). Incluye `null + Liberar_En >= TODAY` para mostrar episodios "programados" (pausados hasta una fecha futura). `ORDER BY UltimoEnvio DESC` para mostrar la actividad más reciente primero.
 
-**Decisión switch Rechazos/Reactivación (index.html):** El SOQL trae ambos universos en una sola query — donaciones activas (`Open`, flujo Maitena/rechazos) y ex-donantes (`Estado_Donante = 'Ex-Donante'`, flujo Genaro/reactivación). El frontend tiene un switch en la topbar (`viewMode`) que discrimina por **`npe03__Open_Ended_Status__c`**: `Open` → Rechazos, `Closed` → Reactivación. Se eligió `Open_Ended_Status` como discriminador (no `Estado_Donante`) porque es binario y semánticamente confiable. La pestaña "Iniciados" (antes "Outbound") muestra `primer_envio` en modo Rechazos y `reactivacion` en modo Reactivación; por eso ambos estados están en el `IN`. El buscador de conversaciones también filtra por tags (Normal, Recuperado, Sin entrega).
+**Decisión switch Rechazos/Reactivación (index.html):** El SOQL trae ambos universos en una sola query — donaciones activas (`Open`, flujo Maitena/rechazos) y ex-donantes (`Estado_Donante = 'Ex-Donante'`, flujo Genaro/reactivación). El frontend tiene un switch debajo de las tabs (`viewMode`) que discrimina por **`npe03__Open_Ended_Status__c`**: `Open` → Rechazos, `Closed` → Reactivación. Se eligió `Open_Ended_Status` como discriminador (no `Estado_Donante`) porque es binario y semánticamente confiable. En modo Reactivación, el frontend además excluye registros donde `WhatsApp_FechaInicioEpisodio__c <= Fecha_de_baja__c` (episodios de la era Maitena, pre-baja); por eso `Fecha_de_baja__c` está en el SELECT. La pestaña "Iniciados" (antes "Outbound") muestra `primer_envio` en modo Rechazos y `reactivacion` en modo Reactivación; por eso ambos estados están en el `IN`. El buscador de conversaciones filtra por nombre, teléfono o tag (Normal, Recuperado, Sin entrega).
 
 ---
 
