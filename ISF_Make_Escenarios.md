@@ -175,6 +175,103 @@ WHERE
 
 ---
 
+## ESCENARIO 2B — ISF Outbound Genaro (Reactivación)
+
+**Propósito:** Contactar proactivamente a ex-donantes (donación cerrada) para invitarlos a retomar su apoyo. Es el hermano outbound de Maitena, pero apunta a donantes que ya churnearon, no a cobros rechazados. Se ejecuta diariamente (cron ~9-10am).
+
+**Categoría WhatsApp:** Los templates se registran en Meta como **Marketing**, no utility. El mensaje pide reactivar un aporte (re-engagement), que es marketing por definición de Meta. Forzarlo como utility arriesga recategorización y baja el quality rating del número. La diferencia de costo (≈$0,06 marketing vs ≈$0,026 utility en AR) no compensa quemar el canal.
+
+### Módulos (clonar de Escenario 2)
+
+| # | Tipo | Descripción |
+|---|---|---|
+| 1 | Salesforce — Make an API Call | SOQL ex-donantes elegibles |
+| 2 | Iterator | Itera sobre cada registro |
+| F4 | Filter | UltimoEnvio < 4 días O no existe |
+| 3 | Tools — Set Variable | Calcula `effective_intentos` (reset a 180 días) |
+| F3 | Filter | `effective_intentos < 2` (solo 2 templates) |
+| 6 | HTTP — Twilio | Envía template con ContentSid según intento |
+| 7 | Salesforce — Update a Record | Actualiza campos post-envío |
+
+### Cadencia
+
+- **Template 1** → día 0 (inicio de episodio)
+- **Template 2** → día +7
+- Sin respuesta tras el segundo → cerrar episodio. **Cooldown de ~6 meses** antes de re-entrada (vía reset de `effective_intentos` o `WhatsApp_Liberar_En__c`).
+- Dos toques con una semana de aire: suave y respetuoso para alguien que ya se fue. Más que eso quema la relación.
+
+### Campos SF
+
+- `WhatsApp_Estado__c = 'reactivacion'` — marca el episodio outbound de Genaro (lo distingue del flujo de rechazos de Maitena).
+- `WhatsApp_Intentos__c` — `0` → template 1, `1` → template 2.
+- `WhatsApp_FechaInicioEpisodio__c` — base para calcular los +7 días y el cooldown de 6 meses.
+- `WhatsApp_UltimoEnvio__c` — anti-duplicado (igual que en rechazos).
+
+### SOQL Outbound (módulo 1)
+```sql
+SELECT Id, ISFAR_Id_18_digitos__c,
+       npe03__Contact__r.FirstName, npe03__Contact__r.MobilePhone,
+       npe03__Amount__c, Medio_de_pago__c,
+       npe03__Date_Established__c, Fecha_de_baja__c,
+       Estado_ltima_op_Cerrada__c,
+       WhatsApp_Estado__c, WhatsApp_Intentos__c,
+       WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
+       WhatsApp_Liberar_En__c, WhatsApp_Historial__c,
+       WhatsApp_Historial_Archivo__c
+FROM npe03__Recurring_Donation__c
+WHERE
+  npe03__Open_Ended_Status__c = 'Closed'
+  AND npe03__Contact__r.Whatsapp_Error__c = false
+  AND No_llamar_callcenter__c = false
+  AND npe03__Contact__r.MobilePhone != null
+  AND WhatsApp_Estado__c != 'cerrado_negativo'
+  AND WhatsApp_Estado__c != 'cerrado_positivo'
+  AND WhatsApp_Estado__c != 'derivado_humano'
+  AND WhatsApp_Estado__c != 'en_conversacion'
+  AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
+  AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
+  AND (
+    WhatsApp_FechaInicioEpisodio__c = null
+    OR (
+      WhatsApp_Intentos__c < 2
+      AND WhatsApp_FechaInicioEpisodio__c >= {{formatDate(addDays(now; -14); "YYYY-MM-DD")}}
+    )
+    OR WhatsApp_FechaInicioEpisodio__c < {{formatDate(addDays(now; -180); "YYYY-MM-DD")}}
+  )
+```
+
+**Diferencias clave respecto al SOQL de Maitena:**
+- **`npe03__Open_Ended_Status__c = 'Closed'`** — apunta a donaciones cerradas (ex-donantes), no a `Estado_Donante__c = 'Rechazada'`.
+- **`WhatsApp_Intentos__c < 2`** — solo 2 templates (Maitena usa 3).
+- **Reset a 180 días** — la tercera rama del `OR` reabre el episodio recién a los 6 meses, no a los 12 días. Un ex-donante no es urgente como un cobro rechazado.
+- **Ventana de episodio en curso = 14 días** — `FechaInicioEpisodio >= hace 14 días` cubre los 2 toques (día 0 y +7) con margen. Pasados los 14 días sin completar, el episodio se considera vencido y solo reabre con la regla de 180 días.
+- **Sin condición de `Last_Payment_Date`** — no aplica el umbral del ciclo de cobro mensual de Maitena; reactivación no depende del calendario de cobros.
+
+### effective_intentos (módulo 3 — Set Variable)
+```
+{{if(
+  2.WhatsApp_FechaInicioEpisodio__c = null
+  | (formatDate(now; "X") - formatDate(2.WhatsApp_FechaInicioEpisodio__c; "X")) / 86400 > 180
+; 0; 2.WhatsApp_Intentos__c)}}
+```
+**Explicación:** Si nunca hubo episodio, o si el último arrancó hace más de 180 días → resetear a 0 (nuevo intento de reactivación). En cualquier otro caso, conservar el contador. Simplifica la lógica de Maitena: como no hay ciclo mensual, alcanza con el umbral de 180 días.
+
+### Templates Twilio outbound (categoría Marketing)
+| effective_intentos | Día | Texto |
+|---|---|---|
+| 0 (primer contacto) | 0 | Reconexión cálida — saludo + invitación a charlar |
+| 1 (segundo intento) | +7 | Impacto concreto + invitación a retomar |
+
+**Template 1 — Reconexión:**
+> Hola {{1}}, soy Genaro, del equipo de Ingeniería Sin Fronteras Argentina. Nos acompañaste un tiempo con tu aporte y quería saludarte y contarte en qué andamos. Tenés un minuto para que te cuente?
+
+**Template 2 — Segundo contacto:**
+> Hola {{1}}, te escribo de nuevo de ISF Argentina. Hoy seguimos llevando agua y obras a comunidades que lo necesitan, gracias a gente que en algún momento decidió acompañar. Si querés que te cuente cómo volver a sumarte, respondé este mensaje y lo vemos juntos.
+
+**Decisión de diseño:** Los templates son cortos, sin tono promocional ni emojis, e invitan a responder. La conversión real no la hace el template sino **Genaro en la ventana de 24h** que se abre cuando el donante responde (escenario 1 inbound, path ex-donante). `{{1}}` = `FirstName`.
+
+---
+
 ## ESCENARIO 3 — ISF_INFO Mensual (Firecrawl)
 
 **Propósito:** Actualizar la Custom Variable de Make `var.organization.info_ISF` con información fresca del sitio de ISF Argentina: proyectos activos y monto mínimo de donación.
