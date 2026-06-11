@@ -365,7 +365,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.48</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.49</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -1153,8 +1153,11 @@ function openBulkLiberate(e){
   const next=new Date();next.setMonth(next.getMonth()+1);next.setDate(1);
   const iso=next.toISOString().slice(0,10);
   document.getElementById('bulk-liberate-date').value=iso;
+  const nNorm=targets.filter(d=>d.estado_donante==='Normal').length;
+  const nRec=targets.filter(d=>d.fecha_mod_tarjeta&&d.fecha_inicio_episodio&&new Date(d.fecha_mod_tarjeta)>=new Date(d.fecha_inicio_episodio)).length;
+  const nErr=targets.filter(d=>d.whatsapp_error).length;
   document.getElementById('bulk-liberate-summary').innerHTML=
-    `Se liberarán <strong>${targets.length}</strong> donantes de Iniciados que tienen tag (Normal, Recuperado o Sin entrega).`;
+    `Se liberarán <strong>${targets.length}</strong> donantes de Iniciados que tienen tag (Normal ${nNorm}, Recuperado ${nRec}, Sin entrega ${nErr}).`;
   document.getElementById('bulk-liberate-overlay').classList.add('open');
 }
 function closeBulkLiberate(){document.getElementById('bulk-liberate-overlay').classList.remove('open')}
