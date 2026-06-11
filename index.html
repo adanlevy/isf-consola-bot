@@ -49,9 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tabs{display:flex;gap:3px}
 .tab{flex:1;padding:5px 2px;font-size:10px;text-align:center;border-radius:var(--r);border:none;cursor:pointer;background:transparent;color:var(--text-2);line-height:1.3;font-family:inherit;transition:background 0.1s}
 .tab.active{background:var(--isf-light);color:var(--isf);font-weight:600}
-.view-switch{display:flex;padding:8px 12px 0;gap:4px;flex-shrink:0}
-.view-btn{flex:1;padding:5px 8px;font-size:11px;font-weight:600;border:1px solid var(--border-2);border-radius:var(--r);cursor:pointer;background:var(--bg-2);color:var(--text-2);font-family:inherit;transition:all 0.15s}
-.view-btn.active{background:var(--isf);color:#fff;border-color:var(--isf)}
+.view-switch{display:flex;gap:3px;padding:6px;background:var(--bg-3);border-bottom:1px solid var(--border);flex-shrink:0}
+.view-btn{flex:1;padding:6px 8px;font-size:11px;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;background:transparent;color:var(--text-2);font-family:inherit;transition:all 0.15s}
+.view-btn.active{background:#fff;color:var(--isf);box-shadow:0 1px 2px rgba(0,0,0,0.08)}
 .tab:hover:not(.active){background:var(--bg-3)}
 .tab-n{display:block;font-size:15px;font-weight:600;line-height:1.2}
 .tab.active .tab-n{color:var(--isf)}
@@ -339,7 +339,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF Argentina
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.40</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.41</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -368,6 +368,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="app">
   <div class="sidebar">
+    <div class="view-switch">
+      <button class="view-btn active" data-view="rechazos" onclick="switchView('rechazos')">Rechazos</button>
+      <button class="view-btn" data-view="reactivacion" onclick="switchView('reactivacion')">Reactivación</button>
+    </div>
     <div class="sidebar-top">
       <div class="tabs">
         <button class="tab active" onclick="switchTab('derivado_humano',this)"><span class="tab-n" id="cnt-h">—</span>Humano</button>
@@ -379,10 +383,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
     <div class="tab-tags" id="tab-tags"></div>
-    <div class="view-switch">
-      <button class="view-btn active" data-view="rechazos" onclick="switchView('rechazos')">Rechazos</button>
-      <button class="view-btn" data-view="reactivacion" onclick="switchView('reactivacion')">Reactivación</button>
-    </div>
     <div class="search-bar">
       <i class="ti ti-search" style="font-size:14px;color:var(--text-3);flex-shrink:0"></i>
       <input class="search-input" id="search-input" type="text" placeholder="Buscar por nombre, teléfono o tag..." oninput="onSearch(this.value)" autocomplete="off">
