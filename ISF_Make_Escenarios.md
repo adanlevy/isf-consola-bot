@@ -263,12 +263,16 @@ WHERE
 | 1 (segundo intento) | +7 | Impacto concreto + invitación a retomar |
 
 **Template 1 — Reconexión:**
-> Hola {{1}}, soy Genaro, del equipo de Ingeniería Sin Fronteras Argentina. Nos acompañaste un tiempo con tu aporte y quería saludarte y contarte en qué andamos. Tenés un minuto para que te cuente?
+> Hola {{nombre}}, soy Genaro, del equipo de **Ingeniería Sin Fronteras Argentina**. Nos acompañaste un tiempo con tu aporte y quería saludarte y contarte en qué andamos. Tenés un minuto para que te cuente?
 
 **Template 2 — Segundo contacto:**
-> Hola {{1}}, te escribo de nuevo de ISF Argentina. Hoy seguimos llevando agua y obras a comunidades que lo necesitan, gracias a gente que en algún momento decidió acompañar. Si querés que te cuente cómo volver a sumarte, respondé este mensaje y lo vemos juntos.
+> Hola {{nombre}}, te escribo desde **Ingeniería Sin Fronteras Argentina**. Gracias a personas como vos llevamos agua y obras a comunidades que de otra forma no las hubieran tenido, y queremos seguir haciéndolo. Te gustaría volver a acompañarnos? Significaría mucho para nosotros.
 
-**Decisión de diseño:** Los templates son cortos, sin tono promocional ni emojis, e invitan a responder. La conversión real no la hace el template sino **Genaro en la ventana de 24h** que se abre cuando el donante responde (escenario 1 inbound, path ex-donante). `{{1}}` = `FirstName`.
+**Decisión de diseño:**
+- Los templates son cortos, sin tono promocional ni emojis, e invitan a responder. La conversión real no la hace el template sino **Genaro en la ventana de 24h** que se abre cuando el donante responde (escenario 1 inbound, path ex-donante).
+- **Variable nombrada `{{nombre}}`** (no `{{1}}`) = `FirstName`. En el módulo Twilio de Make, `ContentVariables` = `{"nombre":"{{2.npe03__Contact__r.FirstName}}"}`.
+- **`Ingeniería Sin Fronteras Argentina` en negrita** — en el body del template se escribe entre asteriscos (`*...*`); WhatsApp lo renderiza en bold.
+- **Saludo con coma, sin `!`** — `Hola {{nombre}},`. En el outbound en frío un `!` suena demasiado efusivo/vendedor. El `!` de admiración de Genaro se reserva para cuando ya hay reciprocidad (el donante respondió).
 
 ---
 
