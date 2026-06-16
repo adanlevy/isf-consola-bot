@@ -366,7 +366,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.50</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.51</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -968,7 +968,7 @@ async function doTake(){
   if(c.wt){try{await fetch(c.wt,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id})})}catch(e){}}
   sel.estado='derivado_humano';sel.liberar_en=null;
   donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(donors);switchToTab('derivado_humano');
+  updateCounts(scopedDonors());switchToTab('derivado_humano');
   const msgs=parseHist(sel.historial);
   renderConv(sel,msgs);
 
@@ -1011,7 +1011,7 @@ async function doTemplate(templateId){
   sel.historial=updatedHistorial;sel.ultimo_mensaje=templateText;sel.estado='derivado_humano';
   sel.ultimo_envio=new Date().toISOString();
   donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(donors);updatePill();
+  updateCounts(scopedDonors());updatePill();
   const ia=document.querySelector('.input-area');
   if(ia)ia.innerHTML=`<div class="waiting-reply"><i class="ti ti-clock" style="font-size:15px;flex-shrink:0"></i> Template enviado. Esperando respuesta del donante para poder escribir libremente.</div>`;
   const chat=document.getElementById('chat');
@@ -1042,7 +1042,7 @@ async function confirmBaja(){
     await fetch(c.wb,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,motivo,observaciones:obs})});
     closeBajaModal();
     donors=donors.filter(d=>d.id!==sel.id);
-    sel=null;updateCounts(donors);renderList();
+    sel=null;updateCounts(scopedDonors());renderList();
     document.getElementById('conv').innerHTML='<div class="empty"><i class="ti ti-check" style="font-size:36px;color:var(--isf)"></i><span>Baja registrada en Salesforce</span></div>';
   }catch(e){
     if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML='<svg width="14" height="10" viewBox="0 0 24 17" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C11.1 2 12.1 2.4 12.9 3.1C13.6 1.3 15.4 0 17.5 0C20 0 22 2 22 4.5C22 4.8 22 5.1 21.9 5.4C23.1 6.1 24 7.4 24 8.9C24 11.2 22.1 13 19.8 13H4.5C2 13 0 11 0 8.5C0 6.3 1.5 4.4 3.6 3.9C3.5 3.6 3.5 3.3 3.5 3C3.5 1.3 4.8 0 6.5 0C7.8 0 8.9 0.8 10 2Z"/></svg> Confirmar baja';}
@@ -1142,7 +1142,7 @@ async function confirmLiberate(){
   const c=cfg();
   if(c.wli){try{await fetch(c.wli,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,liberarEn:date})})}catch(e){}}
   sel.liberar_en=date;sel.estado=null;donors=donors.map(d=>d.id===sel.id?sel:d);
-  closeLiberateModal();updateCounts(donors);switchToTab('programadas');renderConv(sel,parseHist(sel.historial));
+  closeLiberateModal();updateCounts(scopedDonors());switchToTab('programadas');renderConv(sel,parseHist(sel.historial));
 }
 
 // ─── Bulk liberate ───────────────────────────────────────────────────────────
@@ -1179,7 +1179,7 @@ async function confirmBulkLiberate(){
   donors=donors.map(d=>{const t=targets.find(x=>x.id===d.id);return t||d;});
   closeBulkLiberate();
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-checks" style="font-size:12px"></i> Liberar todos';}
-  updateCounts(donors);switchToTab('programadas');renderList();
+  updateCounts(scopedDonors());switchToTab('programadas');renderList();
 }
 // Long-press for mobile
 (function(){
@@ -1194,7 +1194,7 @@ async function doResolve(res){
   if(!sel)return;const c=cfg();
   if(c.wr){try{await fetch(c.wr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,resolution:res})})}catch(e){}}
   sel.estado=res;donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(donors);switchToTab(res);
+  updateCounts(scopedDonors());switchToTab(res);
   const msgs=parseHist(sel.historial);renderConv(sel,msgs);
 }
 
@@ -1302,7 +1302,7 @@ async function handleNewMessage(donationId){
     }
     donors=donors.map(d=>d.id===donationId?{...d,...fresh,ultimo_envio:new Date().toISOString()}:d);
     if(!donors.find(d=>d.id===donationId))donors.unshift(fresh);
-    updateCounts(donors);renderList();
+    updateCounts(scopedDonors());renderList();
   }catch(e){console.error('handleNewMessage:',e)}
 }
 
@@ -1312,7 +1312,7 @@ async function silentRefresh(){
   try{
     const r=await fetch(c.wl);const data=await r.json();
     const updated=(data.records||[]).map(mapRecord);
-    donors=updated;updateCounts(donors);renderList();
+    donors=updated;updateCounts(scopedDonors());renderList();
   }catch(e){}
   if(dot)dot.classList.remove('active');
 }
