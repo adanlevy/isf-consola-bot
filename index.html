@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.53</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.54</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -956,15 +956,12 @@ function renderConv(d,msgs){
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
           <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone}</div></div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
             ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
             ${donorBadge(d)}
             ${d.whatsapp_error?'<span style="display:inline-flex;align-items:center;gap:2px;background:#fef2f2;color:#991b1b;border-radius:99px;font-size:10px;font-weight:600;padding:2px 7px"><i class="ti ti-phone-off" style="font-size:9px"></i> Sin entrega</span>':''}
           </div>
-          <button id="fb-toggle-btn" onclick="toggleConvFeedback()" title="Feedback" style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:var(--r);border:1px solid var(--border-2);background:var(--bg-3);color:var(--text-2);cursor:pointer;font-size:11px;font-weight:500;font-family:inherit;transition:all 0.15s;white-space:nowrap"><i class="ti ti-message-dots" style="font-size:12px"></i> Feedback</button>
-        </div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
 
@@ -978,6 +975,9 @@ function renderConv(d,msgs){
           <button class="feedback-send-btn" onclick="sendConvFeedback(this)"><i class="ti ti-send" style="font-size:12px"></i> Enviar</button>
         </div>
       </div>
+    </div>
+    <div style="background:var(--bg-2);border-top:1px solid var(--border);padding:4px 16px;flex-shrink:0">
+      <button id="fb-toggle-btn" onclick="toggleConvFeedback()" style="display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:var(--r);border:1px solid transparent;background:transparent;color:var(--text-3);cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.15s"><i class="ti ti-message-dots" style="font-size:12px"></i> Dejar feedback</button>
     </div>
     ${inputAreaHtml()}`;
   const chat=document.getElementById('chat');if(chat)chat.scrollTop=chat.scrollHeight;
