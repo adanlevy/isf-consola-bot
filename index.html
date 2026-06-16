@@ -133,6 +133,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mtime{font-size:10px;color:var(--text-3);margin-top:2px}
 .mtime-r{text-align:right}
 
+/* Feedback panel */
+.conv-feedback-panel{background:var(--bg-2);border-top:1px solid var(--border);padding:10px 16px;flex-shrink:0}
+.feedback-ta{width:100%;border:1px solid var(--border-2);border-radius:var(--r);padding:7px 9px;font-size:12px;font-family:inherit;color:var(--text);background:var(--bg);resize:none;outline:none;transition:border-color 0.15s}
+.feedback-ta:focus{border-color:var(--isf)}
+.feedback-actions-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.feedback-sheet-link{font-size:11px;color:var(--isf);text-decoration:none;display:flex;align-items:center;gap:4px}
+.feedback-sheet-link:hover{text-decoration:underline}
+.feedback-send-btn{background:var(--isf);color:#fff;border:none;border-radius:var(--r);padding:5px 12px;font-size:12px;font-family:inherit;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px}
+.feedback-send-btn:hover{background:#007BB0}
 /* Input area */
 .input-area{background:var(--bg-2);border-top:1px solid var(--border);padding:10px 16px;flex-shrink:0}
 .emoji-btn{width:32px;height:32px;border-radius:50%;background:transparent;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.6;transition:opacity 0.1s}
@@ -273,6 +282,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="field"><label>Sugerencia IA — wa</label><input type="text" id="cfg-wa" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Dar de baja — wb</label><input type="text" id="cfg-wb" placeholder="https://hook.make.com/..."></div>
       <div class="field"><label>Estadísticas de bajas — wbs</label><input type="text" id="cfg-wbs" placeholder="https://hook.make.com/..."></div>
+      <div class="field"><label>Feedback (Google Apps Script) — wfb</label><input type="text" id="cfg-wfb" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="field"><label>Hoja de feedback (URL) — wfbx</label><input type="text" id="cfg-wfbx" placeholder="https://docs.google.com/spreadsheets/..."></div>
       <div class="field-section">Tiempo real</div>
       <div class="field"><label>Pusher App Key</label><input type="text" id="cfg-pk" placeholder="tu Pusher App Key"></div>
     </div>
@@ -366,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.52</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.53</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -509,13 +520,13 @@ function toggleStats(e){
 }
 function openSettings(){
   const c=cfg();
-  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk','wfb','wfbx'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)el.value=c[k]||''});
   document.getElementById('overlay').classList.add('open');
 }
 function closeSettings(){document.getElementById('overlay').classList.remove('open')}
 function saveSettings(){
   const c={};
-  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
+  ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk','wfb','wfbx'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el)c[k]=el.value.trim()});
   saveCfg(c);closeSettings();loadAll();if(c.pk)initPusher();
 }
 function loadConfigFile(e){
@@ -524,7 +535,7 @@ function loadConfigFile(e){
   r.onload=ev=>{
     try{
       const c=JSON.parse(ev.target.result);
-      ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
+      ['op','wl','ws','wtr','wt','wli','wr','wa','wb','wbs','pk','wfb','wfbx'].forEach(k=>{const el=document.getElementById('cfg-'+k);if(el&&c[k])el.value=c[k]});
       e.target.value='';
     }catch(err){alert('El archivo no es un JSON válido.');}
   };
@@ -945,17 +956,29 @@ function renderConv(d,msgs){
           <div class="avatar" style="background:${bg};color:${fg}">${initials(d.name)}</div>
           <div><div class="cn">${d.name}</div><div class="cm">+54 9 ${d.phone}</div></div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
-          ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
-          ${donorBadge(d)}
-          ${d.whatsapp_error?'<span style="display:inline-flex;align-items:center;gap:2px;background:#fef2f2;color:#991b1b;border-radius:99px;font-size:10px;font-weight:600;padding:2px 7px"><i class="ti ti-phone-off" style="font-size:9px"></i> Sin entrega</span>':''}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="pill ${pc}" id="status-pill"><i class="ti ${pi}" style="font-size:11px"></i> ${pt}</span>
+            ${d.liberar_en?`<span class="badge bot-resume" style="margin:0"><i class="ti ti-clock" style="font-size:9px"></i> Outbound retoma ${humanDate(d.liberar_en)}</span>`:''}
+            ${donorBadge(d)}
+            ${d.whatsapp_error?'<span style="display:inline-flex;align-items:center;gap:2px;background:#fef2f2;color:#991b1b;border-radius:99px;font-size:10px;font-weight:600;padding:2px 7px"><i class="ti ti-phone-off" style="font-size:9px"></i> Sin entrega</span>':''}
+          </div>
+          <button id="fb-toggle-btn" onclick="toggleConvFeedback()" title="Feedback" style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:var(--r);border:1px solid var(--border-2);background:var(--bg-3);color:var(--text-2);cursor:pointer;font-size:11px;font-weight:500;font-family:inherit;transition:all 0.15s;white-space:nowrap"><i class="ti ti-message-dots" style="font-size:12px"></i> Feedback</button>
         </div>
       </div>
       <div class="actions" id="actions">${actionsHtml()}</div>
 
     </div>
     <div class="chat" id="chat">${msgsHtml}</div>
+    <div class="conv-feedback-panel" id="conv-fb-panel" style="display:none">
+      <div id="conv-fb-body">
+        <textarea class="feedback-ta" id="conv-fb-ta" rows="2" placeholder="Comentario sobre esta conversación..."></textarea>
+        <div class="feedback-actions-row">
+          <a id="conv-fb-sheet-link" href="#" target="_blank" rel="noopener" class="feedback-sheet-link" style="display:none"><i class="ti ti-table" style="font-size:11px"></i> Ver hoja</a>
+          <button class="feedback-send-btn" onclick="sendConvFeedback(this)"><i class="ti ti-send" style="font-size:12px"></i> Enviar</button>
+        </div>
+      </div>
+    </div>
     ${inputAreaHtml()}`;
   const chat=document.getElementById('chat');if(chat)chat.scrollTop=chat.scrollHeight;
 }
@@ -1200,6 +1223,54 @@ async function doResolve(res){
   sel.estado=res;donors=donors.map(d=>d.id===sel.id?sel:d);
   updateCounts(scopedDonors());switchToTab(res);
   const msgs=parseHist(sel.historial);renderConv(sel,msgs);
+}
+
+// ─── Feedback ────────────────────────────────────────────────────────────────
+function toggleConvFeedback(){
+  const panel=document.getElementById('conv-fb-panel');
+  const btn=document.getElementById('fb-toggle-btn');
+  if(!panel)return;
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  if(btn)btn.style.background=open?'':'var(--isf)',btn.style.color=open?'':'#fff',btn.style.borderColor=open?'':'var(--isf)';
+  if(!open){
+    const c=cfg();
+    const link=document.getElementById('conv-fb-sheet-link');
+    if(link){if(c.wfbx){link.href=c.wfbx;link.style.display='flex';}else link.style.display='none';}
+    const ta=document.getElementById('conv-fb-ta');if(ta)ta.focus();
+  }
+}
+function resetConvFeedbackPanel(){
+  const body=document.getElementById('conv-fb-body');
+  if(!body)return;
+  body.innerHTML=`<textarea class="feedback-ta" id="conv-fb-ta" rows="2" placeholder="Comentario sobre esta conversación..."></textarea>
+    <div class="feedback-actions-row">
+      <a id="conv-fb-sheet-link" href="#" target="_blank" rel="noopener" class="feedback-sheet-link" style="display:none"><i class="ti ti-table" style="font-size:11px"></i> Ver hoja</a>
+      <button class="feedback-send-btn" onclick="sendConvFeedback(this)"><i class="ti ti-send" style="font-size:12px"></i> Enviar</button>
+    </div>`;
+}
+async function sendConvFeedback(btn){
+  const ta=document.getElementById('conv-fb-ta');
+  const comment=ta?ta.value.trim():'';
+  const c=cfg();
+  if(!c.wfb){
+    document.getElementById('conv-fb-body').innerHTML='<div style="font-size:12px;color:#b45309;padding:4px 0;display:flex;align-items:center;gap:5px"><i class="ti ti-alert-triangle"></i> Configurá la URL de feedback (wfb) en Configuración.</div>';
+    setTimeout(resetConvFeedbackPanel,3500);return;
+  }
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:12px"></i> Enviando...';
+  const hist=sel?parseHist(sel.historial):[];
+  const conversation=hist.map(m=>`[${m.type==='donor'?'DONANTE':m.type==='bot'?'MAITENA':'HUMANO'}] ${m.text}`).join('\n');
+  const payload={comment,donorName:sel?.name||'',donorPhone:sel?.phone||'',estado:sel?.estado||'',conversation};
+  try{
+    await fetch(c.wfb,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    document.getElementById('conv-fb-body').innerHTML='<div style="font-size:12px;color:var(--text-2);padding:4px 0;display:flex;align-items:center;gap:5px"><i class="ti ti-check"></i> Feedback enviado. Gracias!</div>';
+    const fbBtn=document.getElementById('fb-toggle-btn');
+    if(fbBtn)fbBtn.style.background='',fbBtn.style.color='',fbBtn.style.borderColor='';
+    setTimeout(()=>{const p=document.getElementById('conv-fb-panel');if(p)p.style.display='none';resetConvFeedbackPanel();},2000);
+  }catch(e){
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-send" style="font-size:12px"></i> Enviar';
+    if(ta)ta.placeholder='Error al enviar. Verificá la URL.';
+  }
 }
 
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
