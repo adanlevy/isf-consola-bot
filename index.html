@@ -366,7 +366,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.51</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.52</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -422,6 +422,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="ir"><span class="il">Medio de pago</span><span class="iv" id="si-medio">—</span></div>
       <div class="ir"><span class="il">Antigüedad</span><span class="iv" id="si-ant">—</span></div>
       <div class="ir"><span class="il">Intentos del bot</span><span class="iv" id="si-int">—</span></div>
+      <div class="ir"><span class="il">Último pago</span><span class="iv" id="si-pago">—</span></div>
       <div class="ir"><span class="il">Donante en Salesforce</span><span class="iv"><a id="si-sf" href="#" target="_blank" rel="noopener" style="color:var(--isf);font-size:11px;display:inline-flex;align-items:center;gap:3px;text-decoration:none">— <i class="ti ti-external-link" style="font-size:10px"></i></a></span></div>
     </div>
   </div>
@@ -824,7 +825,8 @@ function mapRecord(r){return{
   fecha_baja:r.Fecha_de_baja__c||null,
   fecha_mod_tarjeta:r.Fecha_modificacion_Nro_Tarjeta_o_CBU__c||null,
   fecha_inicio_episodio:r.WhatsApp_FechaInicioEpisodio__c||null,
-  whatsapp_error:r.npe03__Contact__r?.Whatsapp_Error__c||false
+  whatsapp_error:r.npe03__Contact__r?.Whatsapp_Error__c||false,
+  ultimo_pago:r.Last_payment_date__c||null
 }}
 
 async function loadAll(){
@@ -867,6 +869,8 @@ function selectDonor(id){
   const mo=parseInt(sel.antiguedad_meses||0);
   document.getElementById('si-ant').textContent=mo>=12?`${Math.floor(mo/12)} años`:`${mo} meses`;
   document.getElementById('si-int').textContent=sel.intentos||'0';
+  const pagoEl=document.getElementById('si-pago');
+  if(pagoEl)pagoEl.textContent=sel.ultimo_pago?new Date(sel.ultimo_pago).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
   const sfEl=document.getElementById('si-sf');
   if(sfEl){sfEl.href=`https://isfar.lightning.force.com/lightning/r/npe03__Recurring_Donation__c/${sel.id}/view`;sfEl.innerHTML=`Ir a SF <i class="ti ti-external-link" style="font-size:10px"></i>`}
   const msgs=parseHist(sel.historial);
