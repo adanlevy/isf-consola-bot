@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.59</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.60</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -587,7 +587,21 @@ function linkify(text){
 }
 function avatarColor(n){const c=[['#dbeafe','#1d4ed8'],['#dcfce7','#15803d'],['#fce7f3','#9d174d'],['#fef9c3','#854d0e'],['#f3e8ff','#7e22ce'],['#ffedd5','#c2410c']];return c[n.charCodeAt(0)%c.length]}
 function calcMeses(d){if(!d)return 0;const dt=new Date(d),now=new Date();return Math.max(0,(now.getFullYear()-dt.getFullYear())*12+now.getMonth()-dt.getMonth())}
-function lastMsg(h){if(!h)return'';const lines=h.trim().split('\n').filter(l=>l.trim());const last=lines[lines.length-1];if(!last)return'';const m=last.match(/^\[[^\]]+\]\s+([^:]+):\s+(.+)$/s);return(m?m[2].trim():last).slice(0,60)}
+function lastMsg(h){
+  if(!h)return'';
+  const lines=h.trim().split('\n').filter(l=>l.trim());
+  for(let i=lines.length-1;i>=0;i--){
+    const l=lines[i];
+    if(l.trim()==='[VENTANA_VENCIDA]')return'🚫 No se envió';
+    const m=l.match(/^\[[^\]]+\]\s+([^:]+):\s+(.+)$/s);
+    if(!m)continue;
+    const text=m[2].trim();
+    if(/^\[audio:/i.test(text))return'🎤 Mensaje de voz';
+    if(/^\[image:/i.test(text))return'🖼 Imagen';
+    return text.slice(0,60);
+  }
+  return'';
+}
 function lastMsgDate(h){
   if(!h)return null;
   const lines=h.trim().split('\n').filter(l=>l.trim());
