@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.58</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.59</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -607,6 +607,7 @@ function parseHist(s){
   const lines=s.split('\n');
   const result=[];
   for(const l of lines){
+    if(l.trim()==='[VENTANA_VENCIDA]'){if(result.length>0)result[result.length-1].ventanaVencida=true;continue;}
     const m=l.match(/^\[([^\]]+)\]\s+([^:]+):\s+(.+)$/s);
     if(m){
       const sender=m[2].trim().toUpperCase();
@@ -953,9 +954,9 @@ function renderConv(d,msgs){
     const isTpl=m.type==='human'&&TEMPLATES.some(t=>m.text.includes(t.marker));
     const tplBadge=isTpl?'<span class="tpl-badge"><i class="ti ti-send" style="font-size:9px"></i> Template</span>':'';
     const lbl=m.type==='donor'?`<div class="mlabel mlabel-r">Donante</div>`:m.type==='bot'?`<div class="mlabel"><i class="ti ti-robot" style="font-size:10px"></i> ${m.sender}</div>`:`<div class="mlabel">${tplBadge}<i class="ti ti-user-check" style="font-size:10px"></i> ${m.sender}</div>`;
-    return`<div class="msg ${cls}">${lbl}<div class="bubble ${bcls}">${linkify(m.text)}</div><div class="mtime${m.type==='donor'?' mtime-r':''}">${m.time}</div></div>`;
+    const ventanaTag=m.ventanaVencida?`<div style="display:flex;align-items:center;gap:4px;margin-top:5px;font-size:10px;color:#991b1b;font-weight:500"><i class="ti ti-clock-x" style="font-size:11px"></i> No entregado — ventana de 24hs cerrada</div>`:'';
+    return`<div class="msg ${cls}">${lbl}<div class="bubble ${bcls}">${linkify(m.text)}${ventanaTag}</div><div class="mtime${m.type==='donor'?' mtime-r':''}">${m.time}</div></div>`;
   }).join(''):'<div style="text-align:center;font-size:12px;color:var(--text-2);padding:24px">Sin mensajes registrados</div>';
-  const ventanaWarning=hasVentanaVencida(d.historial)?`<div style="display:flex;justify-content:center;padding:6px 16px"><div style="display:inline-flex;align-items:center;gap:6px;background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:var(--r);font-size:11px;font-weight:500;padding:5px 10px"><i class="ti ti-clock-x" style="font-size:12px"></i> El último mensaje no pudo enviarse — ventana de 24hs cerrada</div></div>`:'';
   document.getElementById('conv').innerHTML=`
     <div class="conv-header">
       <div class="ch-top">
@@ -974,7 +975,7 @@ function renderConv(d,msgs){
       <div class="actions" id="actions">${actionsHtml()}</div>
 
     </div>
-    <div class="chat" id="chat">${msgsHtml}${ventanaWarning}</div>
+    <div class="chat" id="chat">${msgsHtml}</div>
     <div class="conv-feedback-panel" id="conv-fb-panel" style="display:none">
       <div id="conv-fb-body">
         <textarea class="feedback-ta" id="conv-fb-ta" rows="2" placeholder="Comentario sobre esta conversación..."></textarea>
