@@ -78,6 +78,27 @@ El response de Claude puede contener:
 - `[ESTADO:derivado_humano]` → ídem
 - `[ALERTA:emails]`, `[ALERTA:voluntario]`, `[ALERTA:general]` → crea tarea en SF
 
+### Scheduling de respuestas (módulo Twilio de envío)
+
+El módulo de envío usa `Make an API Call` a Twilio con body `application/x-www-form-urlencoded`. Los campos `SendAt` y `ScheduleType=fixed` se agregan condicionalmente al body según horario:
+
+**Reglas:**
+- Lunes a jueves ≥ 20hs → responder a las 9am del día siguiente
+- Domingo cualquier hora → responder a las 9am del lunes
+- Lunes a viernes < 8am → responder a las 9am del mismo día
+- Resto → enviar ahora
+
+**Formato día de la semana:** `formatDate(now; "d"; "America/Argentina/Buenos_Aires")` → 1=domingo, 2=lunes, 3=martes, 4=miércoles, 5=jueves, 6=viernes, 7=sábado. **Nota:** el formato `"u"` no existe en Make, usar `"d"`.
+
+**Body completo:**
+```
+To={{1.From}}&MessagingServiceSid=MG72d9406a54c75fdc106e7a0995c783e4&Body={{replace(...)}}{{if(((formatDate(now; "H"; "America/Argentina/Buenos_Aires") >= 20 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 5 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 2) | formatDate(now; "d"; "America/Argentina/Buenos_Aires") = 1 | (formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 2 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 6)); "&SendAt=" + formatDate(addDays(now; if(formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") != 1; 0; 1)); "YYYY-MM-DD") + "T12:00:00Z&ScheduleType=fixed"; "")}}
+```
+
+`T12:00:00Z` = 9am Argentina (UTC-3), hardcodeado para evitar errores de offset.
+
+**Decisión:** `SendAt` y `ScheduleType` se incluyen como string condicional al final del body. Si el `if` devuelve vacío, Twilio envía inmediatamente. Requiere `MessagingServiceSid` en lugar de `From` directo (requisito de Twilio para mensajes agendados).
+
 ---
 
 ## ESCENARIO 2 — ISF Outbound Maitena (Recupero Donantes)
