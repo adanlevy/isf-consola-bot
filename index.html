@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.60</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.61</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -1379,6 +1379,7 @@ async function handleNewMessage(donationId){
       const oldMsgs=parseHist(sel.historial);
       const newMsgs=parseHist(fresh.historial);
       const added=newMsgs.slice(oldMsgs.length);
+      const historialChanged=sel.historial!==fresh.historial;
       if(added.length>0){
         sel.historial=fresh.historial;sel.ultimo_mensaje=fresh.ultimo_mensaje;
         appendMessages(added);
@@ -1387,6 +1388,9 @@ async function handleNewMessage(donationId){
           if(ia&&ia.querySelector('.waiting-reply'))ia.innerHTML=`<div class="input-row"><textarea class="msg-ta" id="msg-input" rows="1" placeholder="Escribí tu respuesta..." onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="send-btn" onclick="doSend()"><i class="ti ti-send" style="font-size:15px"></i></button></div><div class="ai-row"><button class="ai-rbtn" onclick="requestAiSuggestion()" id="ai-btn" style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--isf);color:var(--isf);background:var(--isf-light);font-size:11px;cursor:pointer;font-family:inherit"><i class="ti ti-sparkles" style="font-size:11px"></i> Sugerir respuesta</button><span id="ai-s" style="display:none"></span></div>`;
 
         }
+      } else if(historialChanged){
+        sel.historial=fresh.historial;sel.ultimo_mensaje=fresh.ultimo_mensaje;
+        renderConv(sel,parseHist(sel.historial));
       }
       if(document.hidden)showNotif(fresh);
     } else {
