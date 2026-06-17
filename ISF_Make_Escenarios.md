@@ -453,6 +453,43 @@ ORDER BY WhatsApp_UltimoEnvio__c DESC NULLS LAST
 
 ---
 
+### Escenario — Status Callback de Twilio
+
+**Propósito:** Recibir notificaciones de Twilio cuando un mensaje cambia de estado (queued → delivered / failed). Twilio llama a este webhook porque el escenario `ws` incluye `StatusCallback=<URL>` en el body del HTTP module.
+
+**Por qué no se puede capturar en `ws` directamente:** Twilio responde `202 Accepted` con `status: queued` al envío — Make considera esto un éxito y termina la ejecución. El error real llega segundos después como callback asíncrono.
+
+**Módulos:**
+1. Webhook — recibe el callback de Twilio
+2. Router con dos ramas según `ErrorCode`:
+
+**Rama A — `ErrorCode = 63024`** (número no puede recibir WhatsApp / error de entrega permanente):
+- SF Update Contacto: `Whatsapp_Error__c = true`
+
+**Rama B — `ErrorCode = 63016`** (ventana de 24hs cerrada):
+- SF Search Records:
+```sql
+SELECT Id, npe03__Contact__c, WhatsApp_UltimoEnvio__c,
+       ISFAR_Id_18_digitos__c,
+       WhatsApp_Historial__c, WhatsApp_Historial_Archivo__c
+FROM npe03__Recurring_Donation__c
+WHERE npe03__Contact__r.MobilePhone = '{{replace(1.To; "whatsapp:+54"; "")}}'
+AND WhatsApp_UltimoEnvio__c = LAST_N_DAYS:2
+ORDER BY WhatsApp_UltimoEnvio__c DESC
+LIMIT 1
+```
+- SF Update Record (donación encontrada):
+  - `WhatsApp_Historial_Archivo__c` = `{{resultado.WhatsApp_Historial_Archivo__c}}` + `\n[VENTANA_VENCIDA]`
+  - `WhatsApp_Historial__c` = `{{resultado.WhatsApp_Historial__c}}` + `\n[VENTANA_VENCIDA]`
+
+**Nota formato teléfono:** `replace(1.To; "whatsapp:+54"; "")` convierte `whatsapp:+5491162916682` → `1162916682` (10 dígitos locales, formato en que están guardados los `MobilePhone` en SF). No se necesita `slice` porque el prefijo `+54` cubre tanto números con como sin el `9` de celular.
+
+**Tag `[VENTANA_VENCIDA]` en el historial:** La consola detecta este tag al parsear el historial. Lo elimina del texto visible y muestra en su lugar un aviso rojo dentro de la burbuja del mensaje fallido: *"No entregado — ventana de 24hs cerrada"*. Si el donante responde después, el tag deja de ser la última línea y el aviso desaparece.
+
+**`LAST_N_DAYS:2`:** Incluye hoy y ayer. Permite identificar la donación correcta incluso si el callback llega con algunas horas de delay.
+
+---
+
 ### Webhook `wa` — Sugerencia IA
 
 **Payload:** `{nombre, monto, estado, historial}`  
