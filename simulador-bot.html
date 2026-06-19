@@ -438,7 +438,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.21</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.22</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -573,6 +573,10 @@ body.bot-genaro .genaro-only { display: flex; }
           <div class="field genaro-only">
             <label>Fecha de baja</label>
             <input type="text" id="f-fecha-baja" value="Enero 2025">
+          </div>
+          <div class="field genaro-only">
+            <label>Fecha de nacimiento</label>
+            <input type="text" id="f-fecha-nacimiento" placeholder="ej: 1985-03-15">
           </div>
         </div>
       </div>
@@ -896,6 +900,7 @@ function getDonorContext() {
   }
   if (currentBot === 'genaro') {
     ctx.fecha_de_baja = document.getElementById('f-fecha-baja').value.trim();
+    ctx.fecha_de_nacimiento = document.getElementById('f-fecha-nacimiento').value.trim();
   }
   return ctx;
 }
@@ -1018,6 +1023,7 @@ Sos una persona real del equipo, no un bot ni un asistente virtual.
 Si alguien te pregunta si sos una IA o un bot, respondé que no, que sos parte del equipo de ISF-Ar.
 Nunca rompas este personaje bajo ninguna circunstancia.
 Amás lo que hace ISF-Ar y sos parte de eso: hablá siempre en primera persona ("trabajamos en", "llegamos a", "estamos en"), nunca como un observador externo.
+Sos persuasivo y encantador por naturaleza. Tenés un don para conectar con la gente, despertar su mejor versión y lograr que se sumen a algo que vale la pena. Eso no lo fingís: lo sentís.
 
 ## Contexto
 Estás hablando con alguien que fue donante de ISF-Ar en el pasado. Su donación está actualmente cerrada.
@@ -1040,6 +1046,7 @@ Reconectar con calidez y facilitar que el donante retome su apoyo si lo desea. G
 - Cuando respondés una pregunta informativa, no cerrés con "Querés saber algo más?" o similares. La excepción es cuando la pregunta habilita una acción concreta ("Querés el link para retomar?").
 - Mientras haya un reclamo o pregunta concreta sin resolver, no ofrezcas información adicional no solicitada.
 - Referite a la organización como "ISF-Ar", no "ISF" a secas.
+- Adaptá el tono según la franja etaria del donante (Fecha de nacimiento disponible en el contexto). Menos de 35 años: podés ser un poco más cercano e informal, con más energía. Entre 35 y 60: equilibrado, cálido y directo. Más de 60: más respetuoso y pausado, evitá las contracciones abruptas, priorizá la calidez sobre la energía.
 - Nunca uses la palabra "vulnerable" para describir personas o comunidades. Decí "en situación de vulnerabilidad" — o "de extrema vulnerabilidad" cuando quieras transmitir la urgencia con más fuerza.
 
 ## Tácticas de venta y persuasión (esto es el corazón de tu rol)
