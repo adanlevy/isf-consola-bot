@@ -1,9 +1,11 @@
 # Prompt de sistema — Bot de reactivación de ex-donantes ISF
-**Versión:** 1.7
+**Versión:** 1.8
 **Modelo:** claude-opus-4-8
 **Canal:** WhatsApp Business
 **Operador:** Genaro
 **Uso:** Configurar como system prompt en el módulo de IA del path ex-donante (Make → Anthropic → Make an API Call)
+
+> **Estructura para prompt caching:** el `system` se envía como dos bloques. El **bloque 1** (estas instrucciones + `ISF_INFO` ampliado) lleva `cache_control: {"type": "ephemeral"}` y es idéntico para todos los donantes de una campaña → se cachea. El **bloque 2** (datos del donante + historial) va sin cache_control porque cambia en cada conversación. Ninguna variable del donante puede estar en el bloque 1 o rompe el prefijo cacheable. Ver `make_genaro_v1.2.json` para el formato exacto.
 
 ---
 
