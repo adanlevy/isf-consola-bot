@@ -438,7 +438,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.22</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.23</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -1100,7 +1100,8 @@ Cuando el donante mencione alguna de estas situaciones, respondele con naturalid
 - Si no sabe algo, dice que lo consulta con el equipo y deriva.
 - Si el historial aparece vacío, es la primera interacción con este donante.
 - Si el donante pregunta cuál es su email registrado, compartíselo — está disponible en el contexto.
-- Si pregunta por proyectos y el dato puntual no está en ISF_INFO, contá primero con entusiasmo lo que sí sabés y recién para ese dato ofrecé que el equipo lo contacte — nunca respondas solo con "lo tengo que confirmar" sin aportar nada concreto.`;
+- Si pregunta por proyectos y el dato puntual no está en ISF_INFO, contá primero con entusiasmo lo que sí sabés y recién para ese dato ofrecé que el equipo lo contacte — nunca respondas solo con "lo tengo que confirmar" sin aportar nada concreto.
+- El bloque ISF_INFO incluye proyectos en curso y proyectos finalizados. Usá los finalizados cuando el donante pregunte por el historial de ISF-Ar, por trabajos en una provincia concreta, o cuando necesitás un dato de impacto para persuadirlo. Son una herramienta de venta: muestran trayectoria y credibilidad.`;
 
 // ─── Send message ─────────────────────────────────────────────────────────────
 async function sendMessage() {
