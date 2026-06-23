@@ -316,6 +316,25 @@ body.bot-genaro .genaro-only { display: flex; }
   background: var(--wa-recv); color: var(--wa-recv-text);
   border-bottom-left-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
+.yt-preview {
+  display: block; margin: 2px 0 6px; border-radius: 8px; overflow: hidden;
+  background: rgba(0,0,0,0.04); text-decoration: none; max-width: 230px;
+}
+[data-theme="dark"] .yt-preview { background: rgba(255,255,255,0.06); }
+.yt-preview-thumb { position: relative; width: 100%; display: block; }
+.yt-preview-thumb img { width: 100%; display: block; }
+.yt-preview-play {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 44px; height: 30px; background: rgba(0,0,0,0.7); border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+.yt-preview-play::after {
+  content: ''; border-style: solid; border-width: 7px 0 7px 12px;
+  border-color: transparent transparent transparent #fff; margin-left: 2px;
+}
+.yt-preview-meta { padding: 6px 9px; }
+.yt-preview-title { font-size: 12.5px; font-weight: 500; line-height: 1.3; color: var(--wa-recv-text); }
+.yt-preview-host { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 .bubble-time { font-size: 10px; color: var(--text-3); margin-top: 3px; text-align: right; }
 .msg-row.sent .bubble-time { color: rgba(17,24,39,0.45); }
 [data-theme="dark"] .msg-row.sent .bubble-time { color: rgba(233,237,239,0.55); }
@@ -438,7 +457,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.28</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.29</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -767,10 +786,48 @@ function addDonorBubble(text) {
   scrollToBottom();
 }
 
+const YT_TITLES = {
+  'cVMsURwWWQU': 'Spot ISF-Ar con Lalo Mir',
+  'wuK3-WTRN0U': 'Quiénes somos — ISF-Ar',
+  'CrbRL2_8Kwg': 'El Negrito de Agua — Santiago del Estero',
+  'ATf5_YbWKFs': 'Agua en Santa Rosa — Santiago del Estero',
+  'u7YH6meQMB0': 'Puente en Varela–Quilmes',
+  'rcXqvdyDw4w': 'Pileta comunitaria en Bernal',
+  'cP2WpNCbm80': 'Programas de agua — ISF-Ar'
+};
+
+function youtubeId(url) {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+function ytPreviewHtml(id) {
+  const title = YT_TITLES[id] || 'YouTube';
+  return `<a class="yt-preview" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">`
+    + `<span class="yt-preview-thumb"><img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt=""><span class="yt-preview-play"></span></span>`
+    + `<span class="yt-preview-meta"><span class="yt-preview-title">${escapeHtml(title)}</span><span class="yt-preview-host">youtube.com</span></span></a>`;
+}
+
+function bubbleBodyHtml(text) {
+  // Detecta links de YouTube y los reemplaza por una tarjeta de preview (como WhatsApp).
+  const ytRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]{11}\S*|youtu\.be\/[\w-]{11}\S*)/g;
+  const urls = text.match(ytRegex) || [];
+  let body = escapeHtml(text);
+  let previews = '';
+  urls.forEach(url => {
+    const id = youtubeId(url);
+    if (!id) return;
+    previews += ytPreviewHtml(id);
+    // Quitar la URL cruda del texto (WhatsApp la absorbe en la preview cuando va sola).
+    body = body.replace(escapeHtml(url), '').replace(/\n{2,}/g, '\n').trim();
+  });
+  return (body ? `<span>${body}</span>` : '') + previews;
+}
+
 function addBotBubble(text, initial) {
   const row = document.createElement('div');
   row.className = 'msg-row recv';
-  row.innerHTML = `<div class="bubble-avatar">${initial}</div><div><div class="bubble">${escapeHtml(text)}</div><div class="bubble-time">${now()}</div></div>`;
+  row.innerHTML = `<div class="bubble-avatar">${initial}</div><div><div class="bubble">${bubbleBodyHtml(text)}</div><div class="bubble-time">${now()}</div></div>`;
   document.getElementById('messages').appendChild(row);
   scrollToBottom();
 }
