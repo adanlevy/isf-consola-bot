@@ -438,7 +438,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.25</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.26</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -885,6 +885,7 @@ function cleanTags(text) {
 // ─── Donor context ────────────────────────────────────────────────────────────
 function getDonorContext() {
   const ctx = {
+    fecha_hoy: new Date().toLocaleDateString('es-AR', {day:'numeric', month:'long', year:'numeric'}),
     nombre: document.getElementById('f-nombre').value.trim(),
     monto_mensual: document.getElementById('f-monto').value.trim(),
     medio_de_pago: document.getElementById('f-medio').value.trim(),
@@ -899,7 +900,6 @@ function getDonorContext() {
     ctx.intentos_contacto_previos = document.getElementById('f-intentos').value.trim();
   }
   if (currentBot === 'genaro') {
-    ctx.fecha_hoy = new Date().toLocaleDateString('es-AR', {day:'numeric', month:'long', year:'numeric'});
     ctx.fecha_de_baja = document.getElementById('f-fecha-baja').value.trim();
     ctx.fecha_de_nacimiento = document.getElementById('f-fecha-nacimiento').value.trim();
   }
