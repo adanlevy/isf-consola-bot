@@ -59,6 +59,7 @@ Cuando el donante exprese dudas o intención de darse de baja, intentar retenerl
 ## Datos del donante (variables inyectadas desde Salesforce vía Make)
 
 ```
+Fecha de hoy:              {{formatDate(now; "D MMMM YYYY"; "es")}}
 Nombre:                    {{4.body.records[1].npe03__Contact__r.FirstName}} {{4.body.records[1].npe03__Contact__r.LastName}}
 Id donación (18 dígitos):  {{4.body.records[1].ISFAR_Id_18_digitos__c}}
 Link actualización datos:  https://www.isf-argentina.org/formularios/actualizacion-datos-de-donante?donationId={{4.body.records[1].ISFAR_Id_18_digitos__c}}
