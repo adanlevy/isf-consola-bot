@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.62</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.63</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -424,7 +424,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="tabs" id="tabs-bienv" style="display:none">
         <button class="tab active" onclick="switchTab('b_enviada',this)"><span class="tab-n" id="cnt-b-env">—</span>Enviada</button>
         <button class="tab" onclick="switchTab('b_enconv',this)"><span class="tab-n" id="cnt-b-ec">—</span>En conv.</button>
-        <button class="tab" onclick="switchTab('b_pago',this)"><span class="tab-n" id="cnt-b-pago">—</span>Pago</button>
         <button class="tab" onclick="switchTab('b_humano',this)"><span class="tab-n" id="cnt-b-h">—</span>Humano</button>
         <button class="tab" onclick="switchTab('b_final',this)"><span class="tab-n" id="cnt-b-fin">—</span>Finalizada</button>
       </div>
@@ -492,7 +491,7 @@ function scopedDonors(){
   });
 }
 // Tabs de la vista Bienvenida → valor de Bienvenida_Estado__c que representan
-const BIENV_TABS={b_enviada:'bienvenida',b_enconv:'en_conversacion',b_pago:'derivado_pago',b_humano:'derivado_humano',b_final:'finalizado'};
+const BIENV_TABS={b_enviada:'bienvenida',b_enconv:'en_conversacion',b_humano:'derivado_humano',b_final:'finalizado'};
 function switchView(mode){
   viewMode=mode;
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));
@@ -687,7 +686,6 @@ function pillInfo(d){
     const b=d.bienvenida_estado;
     if(b==='bienvenida')return['pec','ti-send','Bienvenida enviada'];
     if(b==='en_conversacion')return['pec','ti-message-chatbot','Lucero conversando'];
-    if(b==='derivado_pago')return['pn','ti-credit-card','Derivado a pago'];
     if(b==='derivado_humano')return['ph','ti-user','Con humano'];
     if(b==='finalizado')return['pp','ti-check','Finalizada'];
     return['ph','ti-circle','Activo'];
@@ -703,7 +701,7 @@ function pillInfo(d){
 function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';if(e==='en_conversacion'||e==='primer_envio')return'bec';return'br'}
 function botStatusBadge(d){
   if(viewMode==='bienvenida'){
-    if(d.bienvenida_estado==='derivado_humano'||d.bienvenida_estado==='derivado_pago')return['bot-off','ti-robot-off','Lucero desactivado'];
+    if(d.bienvenida_estado==='derivado_humano')return['bot-off','ti-robot-off','Lucero desactivado'];
     if(d.bienvenida_estado==='finalizado')return['bot-off','ti-robot-off','Bienvenida finalizada'];
     return['bot-on','ti-robot','Lucero activo'];
   }
@@ -791,7 +789,6 @@ function updateCounts(d){
     const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
     set('cnt-b-env',d.filter(x=>x.bienvenida_estado==='bienvenida').length);
     set('cnt-b-ec',d.filter(x=>x.bienvenida_estado==='en_conversacion').length);
-    set('cnt-b-pago',d.filter(x=>x.bienvenida_estado==='derivado_pago').length);
     set('cnt-b-h',d.filter(x=>x.bienvenida_estado==='derivado_humano').length);
     set('cnt-b-fin',d.filter(x=>x.bienvenida_estado==='finalizado').length);
     return;
