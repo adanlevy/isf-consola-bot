@@ -323,6 +323,84 @@ Si ninguna se cumple, el registro se descarta (caso a bloquear: episodio de Gena
 
 ---
 
+## ESCENARIO 2C — ISF Outbound Lucero (Bienvenida)
+
+**Propósito:** Dar la bienvenida a un donante **nuevo** apenas se crea su donación recurrente. Es un **único envío proactivo** (no hay graduación ni segundo toque). Si el donante responde, Lucero conversa en la ventana de 24h (escenario 1 inbound, path bienvenida — pendiente de sumar). El disparo no es por cron sino por evento: un Flow de Salesforce dispara el webhook al crearse la Recurring Donation.
+
+**Categoría WhatsApp:** los templates se registran en Meta como **Marketing** (bienvenida + video institucional + invitación a redes). No registrar como utility.
+
+**Bienvenida de un solo paso:** sin `WhatsApp_Intentos__c`, sin `effective_intentos`, sin campo de "paso". El único campo de control del flujo es `Bienvenida_Estado__c`.
+
+### Módulos
+
+| # | Tipo | Descripción |
+|---|---|---|
+| 1 | Webhooks — Custom Webhook | Recibe el POST del Flow de SF (Id de la Recurring Donation o del Contact) |
+| 2 | Tools — Sleep | Espera X horas (para que `EmailBouncedDate` se registre en SF tras el envío del email de bienvenida) |
+| 3 | Salesforce — Search Records | Re-lee el donante (datos frescos, incluido `EmailBouncedDate`) |
+| 4 | Tools — Set Variable | `medioPago` — arma el string del medio de pago (= `{{3}}` del template) |
+| 5 | Router | Ruta A: `EmailBouncedDate` vacío / Ruta B: `EmailBouncedDate` con fecha |
+| 6A | HTTP — Twilio | Envía `isf_bienvenida_dia0_emailok` |
+| 6B | HTTP — Twilio | Envía `isf_bienvenida_dia0_emailbounce` |
+| 7 | Salesforce — Update a Record | Un solo update post-envío (historial + estado + último envío) |
+
+### SOQL / Search Records (módulo 3)
+```sql
+SELECT Id, ISFAR_Id_18_digitos__c,
+       npe03__Contact__r.FirstName, npe03__Contact__r.LastName,
+       npe03__Contact__r.MobilePhone, npe03__Contact__r.Email,
+       npe03__Contact__r.EmailBouncedDate,
+       npe03__Amount__c, Medio_de_pago__c,
+       ISFAR_ultimos_4_digitos_tarjeta_cbu__c,
+       npe03__Date_Established__c, npe03__Next_Payment_Date__c,
+       Bienvenida_Estado__c,
+       WhatsApp_Historial__c, WhatsApp_Historial_Archivo__c
+FROM npe03__Recurring_Donation__c
+WHERE Id = '{{1.recurringDonationId}}'
+LIMIT 1
+```
+
+### Variante por rebote de email (Router módulo 5)
+- **Ruta A** (`EmailBouncedDate` vacío) → template `isf_bienvenida_dia0_emailok`. Condición: `npe03__Contact__r.EmailBouncedDate` **Does not exist**.
+- **Ruta B** (`EmailBouncedDate` con fecha) → template `isf_bienvenida_dia0_emailbounce`. Condición: `npe03__Contact__r.EmailBouncedDate` **Exists**.
+
+### ContentVariables Twilio (ambas rutas)
+```json
+{
+  "1": "{{3.npe03__Contact__r.FirstName}}",
+  "2": "{{3.npe03__Amount__c}}",
+  "3": "{{var.medioPago}}",
+  "4": "{{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}",
+  "5": "{{3.npe03__Contact__r.Email}}"
+}
+```
+
+### Update post-envío (módulo 7) — escribe en SF para que la consola lo tome
+
+**`WhatsApp_Historial__c`** (episodio — se inyecta en el prompt de Lucero en el inbound):
+```
+[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: Hola {{3.npe03__Contact__r.FirstName}}, soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. Te damos la bienvenida a la comunidad! Quería confirmarte que recibimos tu donación de ${{3.npe03__Amount__c}} mensuales a través de tu {{var.medioPago}} que finaliza en {{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}. Gracias por sumarte. Te comparto este video: https://www.youtube.com/watch?v=cVMsURwWWQU {{if(isEmpty(3.npe03__Contact__r.EmailBouncedDate); "Te enviamos un email de bienvenida a " + 3.npe03__Contact__r.Email + ". ¿Es correcto?"; "Intentamos enviarte el email de bienvenida a " + 3.npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo?")}}
+```
+
+**`WhatsApp_Historial_Archivo__c`** (completo — lo ve el operador en la consola):
+```
+{{3.WhatsApp_Historial_Archivo__c + newline}}[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: Hola {{3.npe03__Contact__r.FirstName}}, soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. Te damos la bienvenida a la comunidad! Quería confirmarte que recibimos tu donación de ${{3.npe03__Amount__c}} mensuales a través de tu {{var.medioPago}} que finaliza en {{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}. Gracias por sumarte. Te comparto este video: https://www.youtube.com/watch?v=cVMsURwWWQU {{if(isEmpty(3.npe03__Contact__r.EmailBouncedDate); "Te enviamos un email de bienvenida a " + 3.npe03__Contact__r.Email + ". ¿Es correcto?"; "Intentamos enviarte el email de bienvenida a " + 3.npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo?")}}
+```
+
+**`WhatsApp_UltimoEnvio__c`** (datetime): `{{now}}`
+
+**`Bienvenida_Estado__c`**: `bienvenida`
+
+### Notas de diseño
+
+- **El texto del historial es la versión compacta** (una línea, sin los saltos del template real). El template de Twilio lleva su formato completo con saltos de línea; el historial se compacta para leerse bien en el prompt de Claude en el inbound y en la consola.
+- **`isEmpty(EmailBouncedDate)`** decide la frase final del historial igual que el router decide el template — así el registro refleja exactamente lo que se envió. Verificar que en la cuenta la función sea `isEmpty()`.
+- **`{{var.medioPago}}`** se arma en el módulo 4 con la misma lógica que alimenta `ContentVariables.3`, para que el texto del Twilio y el del historial coincidan exactamente.
+- **Sin prepend del historial episódico** — un donante nuevo arranca con el episodio vacío.
+- **Anticolisión con Maitena:** el SOQL outbound de Maitena (escenario 2) debe excluir donantes con episodio de bienvenida activo (`Bienvenida_Estado__c` en `bienvenida` / `en_conversacion`). Si el primer débito del donante nuevo efectivamente falla en SF, ese caso lo retoma Maitena por su propio circuito; Lucero no lo dispara.
+
+---
+
 ## ESCENARIO 3 — ISF_INFO Mensual (Firecrawl)
 
 **Propósito:** Actualizar la Custom Variable de Make `var.organization.info_ISF` con información fresca del sitio de ISF Argentina: proyectos activos y monto mínimo de donación.
