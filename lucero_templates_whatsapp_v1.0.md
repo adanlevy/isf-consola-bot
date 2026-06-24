@@ -73,7 +73,7 @@ Quería confirmarte que recibimos tu donación de ${{2}} mensuales a través de 
 Para que nos conozcas un poco más de cerca, te comparto este video cortito:
 https://www.youtube.com/watch?v=cVMsURwWWQU
 
-Te quería comentar que intentamos enviarte el email de bienvenida a {{5}} pero nos rebotó. ¿Nos pasás una dirección de correo correcta así te mantenemos al tanto de todo? 🙏
+Te quería comentar que intentamos enviarte el email de bienvenida a {{5}} pero nos rebotó. ¿Nos corregirías el correo así te mantenemos al tanto de todo? 🙏
 ```
 
 ### Footer (opcional)
