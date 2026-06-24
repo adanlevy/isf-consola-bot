@@ -36,7 +36,7 @@
 ```
 Hola {{1}} 👋
 
-Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la familia!
+Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!
 
 Quería confirmarte que recibimos tu donación de ${{2}} mensuales a través de tu {{3}} que finaliza en {{4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
 
@@ -66,7 +66,7 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ```
 Hola {{1}} 👋
 
-Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la familia!
+Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!
 
 Quería confirmarte que recibimos tu donación de ${{2}} mensuales a través de tu {{3}} que finaliza en {{4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
 
