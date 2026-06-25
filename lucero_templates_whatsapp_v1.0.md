@@ -58,6 +58,7 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ---
 
 ## Template 1B — `isf_bienvenida_dia0_emailbounce`
+**ContentSid:** `HX584717a9f72e3b796c4228a1c6611944`
 
 **Cuándo se usa:** Día 0 del episodio Lucero — email rebotado (`EmailBouncedDate` ≠ null). Make detecta el bounce y envía esta variante.
 

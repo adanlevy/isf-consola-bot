@@ -398,7 +398,7 @@ LIMIT 1
 
 ### Variante por rebote de email (Router módulo 5)
 - **Ruta A** (`EmailBouncedDate` vacío) → template `isf_bienvenida_dia0_emailok` · ContentSid: `HXcec64cccdac1e6a3419e4af16d0f37f1`. Condición: `npe03__Contact__r.EmailBouncedDate` **Does not exist**.
-- **Ruta B** (`EmailBouncedDate` con fecha) → template `isf_bienvenida_dia0_emailbounce` · ContentSid: pendiente. Condición: `npe03__Contact__r.EmailBouncedDate` **Exists**.
+- **Ruta B** (`EmailBouncedDate` con fecha) → template `isf_bienvenida_dia0_emailbounce` · ContentSid: `HX584717a9f72e3b796c4228a1c6611944`. Condición: `npe03__Contact__r.EmailBouncedDate` **Exists**.
 
 ### ContentVariables Twilio (ambas rutas)
 ```json
