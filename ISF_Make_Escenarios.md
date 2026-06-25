@@ -186,11 +186,47 @@ WHERE
 **Explicación:** Si el episodio empezó en un mes diferente al actual Y hace más de 12 días → resetear a 0 (nuevo episodio). Esto permite que el bot retome contacto con donantes que no respondieron el mes anterior sin acumular intentos indefinidamente. El umbral de 12 días evita resetear demasiado rápido al cruzar el mes.
 
 ### Templates Twilio outbound
-| effective_intentos | Content SID | Texto |
+
+| effective_intentos | Content SID | Variables |
 |---|---|---|
-| 0 (primer contacto) | HXf642b2f6992989c36eb27e10b3081ebd | Mención del monto y medio de pago |
-| 1 (segundo intento) | HX478333e9565b698a96620f39a1dbf19d | Nombre + monto + link formulario |
-| 2 (tercer intento) | HXc5273876072a46f3ea8e65a9a9e87dd6 | Último intento — más directo |
+| 0 (primer contacto) | HXf642b2f6992989c36eb27e10b3081ebd | `{{monto}}`, `{{medio_pago}}` |
+| 1 (segundo intento) | HX478333e9565b698a96620f39a1dbf19d | `{{nombre}}`, `{{monto}}`, `{{url_formulario}}` |
+| 2 (tercer intento) | HXc5273876072a46f3ea8e65a9a9e87dd6 | `{{nombre}}` |
+
+**Template 1 — Primer contacto:**
+```
+Hola 👋 Soy Maitena del equipo de Ingeniería Sin Fronteras Argentina.
+
+Te escribimos porque tu donación mensual de ${{monto}} no pudo procesarse este mes con tu {{medio_pago}}.
+
+¿Podemos ayudarte a ponerlo al día? Tu apoyo hace posible que sigamos trabajando en comunidades rurales de todo el país 🙏
+```
+
+**Template 2 — Segundo intento:**
+```
+Hola {{nombre}}, te escribe Maitena de Ingeniería Sin Fronteras Argentina.
+
+Tu donación de ${{monto}} aún no pudo procesarse. Queremos que sigas siendo parte. Gracias a personas como vos llevamos ingeniería a donde más se necesita.
+
+Te pasamos el link para que puedas actualizarlo cuando tengas un momento: {{url_formulario}} 🔒
+```
+
+**Template 3 — Tercer intento:**
+```
+Hola {{nombre}}, te escribimos desde ISF.
+
+Tu apoyo durante este tiempo fue muy valioso para las comunidades con las que trabajamos. Si podemos hacer algo para que sigas acompañándonos, respondé este mensaje y coordinamos juntos.
+```
+
+**ContentVariables Make:**
+```json
+{
+  "monto":         "{{2.npe03__Amount__c}}",
+  "medio_pago":    "{{var.medioPago}}",
+  "nombre":        "{{2.npe03__Contact__r.FirstName}}",
+  "url_formulario":"{{var.url_formulario}}"
+}
+```
 
 **Decisión:** 3 templates distintos para no sonar repetitivo. El tercero es más directo porque es el último antes de cerrar el episodio.
 
@@ -367,11 +403,11 @@ LIMIT 1
 ### ContentVariables Twilio (ambas rutas)
 ```json
 {
-  "1": "{{3.npe03__Contact__r.FirstName}}",
-  "2": "{{3.npe03__Amount__c}}",
-  "3": "{{var.medioPago}}",
-  "4": "{{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}",
-  "5": "{{3.npe03__Contact__r.Email}}"
+  "nombre":     "{{3.npe03__Contact__r.FirstName}}",
+  "monto":      "{{3.npe03__Amount__c}}",
+  "medio_pago": "{{var.medioPago}}",
+  "ultimos4":   "{{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}",
+  "email":      "{{3.npe03__Contact__r.Email}}"
 }
 ```
 

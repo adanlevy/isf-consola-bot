@@ -18,11 +18,11 @@
 ### Variables (Template 1, ambas variantes)
 | Variable | Campo SF / Make | Ejemplo |
 |---|---|---|
-| `{{1}}` | `Contact.FirstName` | Sandro |
-| `{{2}}` | `npe03__Amount__c` (sin decimales) | 25000 |
-| `{{3}}` | medio de pago (string construido en Make) | tarjeta Visa Crédito |
-| `{{4}}` | últimos 4 dígitos de la tarjeta | 4321 |
-| `{{5}}` | email registrado | sandro@gmail.com |
+| `{{nombre}}` | `Contact.FirstName` | Sandro |
+| `{{monto}}` | `npe03__Amount__c` (sin decimales) | 25000 |
+| `{{medio_pago}}` | medio de pago (string construido en Make) | tarjeta Visa Crédito |
+| `{{ultimos4}}` | últimos 4 dígitos de la tarjeta | 4321 |
+| `{{email}}` | email registrado | sandro@gmail.com |
 
 ---
 
@@ -35,16 +35,16 @@
 ### Body
 
 ```
-Hola {{1}} 👋
+Hola {{nombre}} 👋
 
 Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!
 
-Quería confirmarte que recibimos tu donación de ${{2}} mensuales a través de tu {{3}} que finaliza en {{4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
+Quería confirmarte que recibimos tu donación de ${{monto}} mensuales a través de tu {{medio_pago}} que finaliza en {{ultimos4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
 
 Para que nos conozcas un poco más de cerca, te comparto este video cortito:
 https://www.youtube.com/watch?v=cVMsURwWWQU
 
-Te enviamos un email de bienvenida a {{5}}. ¿Es correcto? Cualquier duda o corrección, respondé este mensaje, estoy acá para ayudarte.
+Te enviamos un email de bienvenida a {{email}}. ¿Es correcto? Cualquier duda o corrección, respondé este mensaje, estoy acá para ayudarte.
 ```
 
 ### Footer (opcional)
@@ -52,7 +52,7 @@ Te enviamos un email de bienvenida a {{5}}. ¿Es correcto? Cualquier duda o corr
 ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ```
 
-**Sample:** `{{1}}=Sandro · {{2}}=25000 · {{3}}=tarjeta Visa Crédito · {{4}}=4321 · {{5}}=sandro@gmail.com`
+**Sample:** `{{nombre}}=Sandro · {{monto}}=25000 · {{medio_pago}}=tarjeta Visa Crédito · {{ultimos4}}=4321 · {{email}}=sandro@gmail.com`
 
 ---
 
@@ -65,16 +65,16 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ### Body
 
 ```
-Hola {{1}} 👋
+Hola {{nombre}} 👋
 
 Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!
 
-Quería confirmarte que recibimos tu donación de ${{2}} mensuales a través de tu {{3}} que finaliza en {{4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
+Quería confirmarte que recibimos tu donación de ${{monto}} mensuales a través de tu {{medio_pago}} que finaliza en {{ultimos4}}. Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙
 
 Para que nos conozcas un poco más de cerca, te comparto este video cortito:
 https://www.youtube.com/watch?v=cVMsURwWWQU
 
-Te quería comentar que intentamos enviarte el email de bienvenida a {{5}} pero nos rebotó. ¿Nos corregirías el correo así te mantenemos al tanto de todo? 🙏
+Te quería comentar que intentamos enviarte el email de bienvenida a {{email}} pero nos rebotó. ¿Nos corregirías el correo así te mantenemos al tanto de todo? 🙏
 ```
 
 ### Footer (opcional)
@@ -82,7 +82,7 @@ Te quería comentar que intentamos enviarte el email de bienvenida a {{5}} pero 
 ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ```
 
-**Sample:** `{{1}}=Sandro · {{2}}=25000 · {{3}}=tarjeta Visa Crédito · {{4}}=4321 · {{5}}=sandro@gmail.com`
+**Sample:** `{{nombre}}=Sandro · {{monto}}=25000 · {{medio_pago}}=tarjeta Visa Crédito · {{ultimos4}}=4321 · {{email}}=sandro@gmail.com`
 
 ---
 
