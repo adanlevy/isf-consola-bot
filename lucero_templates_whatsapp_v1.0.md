@@ -27,6 +27,7 @@
 ---
 
 ## Template 1A — `isf_bienvenida_dia0_emailok`
+**ContentSid:** `HXcec64cccdac1e6a3419e4af16d0f37f1`
 
 **Cuándo se usa:** Día 0 del episodio Lucero — email NO rebotado (`EmailBouncedDate` = null). Caso normal.
 
