@@ -9,7 +9,7 @@
 ## Notas de registro
 
 - **Categoría:** UTILITY. Meta los aprobó como Utility porque el núcleo del mensaje es la confirmación de una transacción (la donación que se debita). Es más barato que Marketing (~$0.026 vs ~$0.06 en AR). ⚠️ Meta puede recategorizar a Marketing más adelante si considera el contenido promocional — si eso pasa, no es un error de configuración.
-- **Lucero hace un solo envío proactivo:** el template de bienvenida (día 0). No hay graduación ni segundo toque. Si el donante responde, Lucero sigue conversando normalmente (inbound) y maneja derivaciones/alertas.
+- **Lucero hace un solo envío proactivo:** el template de bienvenida (día 0). No hay graduación ni segundo toque. Si el donante responde, lo toma **Maitena** en la conversación (no hay inbound ni prompt separado de Lucero).
 - **El template de bienvenida tiene dos variantes** según el resultado del chequeo de email en Salesforce (`EmailBouncedDate`): `_emailok` (no rebotó) y `_emailbounce` (rebotó). Make elige cuál enviar tras el sleep.
 - **YouTube preview:** se genera automáticamente en WhatsApp cuando la URL está sola en una línea del body. No usar header multimedia separado.
 - **Sender:** el número de WhatsApp Business de ISF-Ar (el mismo que Maitena y Genaro).
@@ -97,8 +97,8 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 4. Guardar el `ContentSid` (`HXxxxx…`) de cada template — se configuran en Make.
 
 ### Configuración en Make (escenario Lucero Outbound)
-- **Día 0 (único envío proactivo):** tras el sleep, Make re-lee SF. Si `EmailBouncedDate` = null → envía `isf_bienvenida_dia0_emailok`. Si ≠ null → envía `isf_bienvenida_dia0_emailbounce`. Luego setea `Bienvenida_Estado__c = 'bienvenida'`.
-- **Inbound:** si el donante responde, Make llama a Claude con el prompt de Lucero, procesa tags y actualiza `Bienvenida_Estado__c` (`en_conversacion`, `derivado_humano`, `finalizado`).
+- **Día 0 (único envío proactivo):** tras el sleep, Make re-lee SF. Si `EmailBouncedDate` = null → envía `isf_bienvenida_dia0_emailok`. Si ≠ null → envía `isf_bienvenida_dia0_emailbounce`. Luego setea `WhatsApp_Estado__c = 'bienvenida'` y `WhatsApp_Fecha_Bienvenida__c = now`.
+- **Inbound:** si el donante responde, lo toma **Maitena** (escenario 1 inbound, path donante activo). No hay prompt ni escenario de inbound de Lucero.
 - No hay segundo envío programado (graduación eliminada).
 
 ### Construcción de `{{3}}` y `{{4}}` (medio de pago)

@@ -20,7 +20,7 @@ Sistema de comunicación automatizada con donantes de **Ingeniería Sin Frontera
 | CRM | Salesforce NPC | Fuente de verdad de donantes y donaciones |
 | Orquestación | Make.com | Conecta todas las piezas, maneja lógica |
 | Mensajería | Twilio WhatsApp Business | Envío/recepción de mensajes |
-| IA | Claude Sonnet 4.6 (Anthropic) | Genera respuestas de Maitena y Genaro |
+| IA | Claude Opus 4.8 (Anthropic) | Genera respuestas de Maitena y Genaro |
 | Scraping | Firecrawl | Actualiza info de proyectos mensualmente |
 | Tiempo real | Pusher Channels | Notificaciones push a la plataforma |
 | Plataforma | HTML/JS (GitHub Pages) | Interfaz para operadores humanos |
@@ -122,11 +122,24 @@ cerrado_positivo / cerrado_negativo / null+fecha
 - **Aporte extra puntual vs cambio permanente:** son flujos distintos. El aporte extra (único) deriva a humano. El cambio de monto permanente se resuelve en el chat con la alerta.
 - **Alertas disponibles:** `[ALERTA:emails]`, `[ALERTA:voluntario]`, `[ALERTA:cambio_monto]`, `[ALERTA:general]`
 
+- **Recursos visuales:** catálogo de videos de YouTube que puede compartir en la conversación (se usan en la retención, para reconectar al donante con el impacto).
+
 ### Genaro (reactivación ex-donantes)
 - **Activa cuando:** `npe03__Open_Ended_Status__c = 'Closed'`
 - **Objetivo:** que el ex-donante retome su apoyo
 - **Tono:** persuasivo y entusiasta, defiende la propuesta con convicción
 - **Diferencia clave:** puede insistir dos veces antes de cerrar con dignidad
+- **Recursos visuales:** catálogo de videos de YouTube para subir la temperatura cuando el ex-donante muestra curiosidad.
+
+### Lucero (bienvenida nuevos donantes)
+- **Nombre de fantasía:** "Lucero" es solo el nombre con que firma el template; no tiene prompt ni bot de inbound propio.
+- **Dispara cuando:** se crea una donación recurrente nueva (Flow de SF → HTTP Callout → webhook de Make).
+- **Objetivo:** dar la bienvenida y cotejar el email (chequea `EmailBouncedDate`).
+- **Único toque proactivo:** un solo template de bienvenida (día 0, ~2hs después del alta, con variante según rebote de email). No hay graduación ni segundo envío.
+- **Conversación:** si el donante responde, lo toma **Maitena** (ya tiene todo el contexto). No existe inbound de Lucero.
+- **Estado:** `WhatsApp_Estado__c = 'bienvenida'` + `WhatsApp_Fecha_Bienvenida__c`. No setea `WhatsApp_UltimoEnvio__c` para que, si el primer débito falla, Maitena lo recupere de inmediato.
+- **Anticolisión con Maitena:** los donantes nuevos no tienen `Estado_Donante__c = 'Rechazada'`, así que el outbound de Maitena no los toca hasta que efectivamente rebote un cobro.
+- **Templates:** Utility (aprobados por Meta). Ver `lucero_templates_whatsapp_v1.0.md`.
 
 ---
 
@@ -157,11 +170,14 @@ cerrado_positivo / cerrado_negativo / null+fecha
 
 | Archivo | Descripción |
 |---|---|
-| `index.html` | Plataforma de gestión (v1.35) |
-| `isf_config.json` | Template de configuración (sin credenciales reales) |
+| `index.html` | Plataforma de gestión (consola) |
+| `simulador-bot.html` | Simulador de conversaciones (Maitena + Genaro) |
+| `isf_config.json` | Configuración local (con credenciales — NUNCA se commitea al repo) |
 | `make_maitena_v3.4.json` | Body del módulo Anthropic para Maitena en Make |
-| `isf_bot_prompt_v1_4.md` | System prompt de Maitena |
-| `isf_bot_prompt_genaro_v1_1.md` | System prompt de Genaro |
+| `make_genaro_v1.2.json` | Body del módulo Anthropic para Genaro en Make |
+| `isf_bot_maitena_v3.4.md` | System prompt de Maitena |
+| `isf_bot_genaro_v1.2.md` | System prompt de Genaro |
+| `lucero_templates_whatsapp_v1.0.md` | Templates de WhatsApp de bienvenida (Lucero) |
 | `ISF_Make_Escenarios.md` | Documentación detallada de todos los escenarios Make |
 | `ISF_Resumen_General.md` | Este archivo |
 
@@ -171,11 +187,9 @@ cerrado_positivo / cerrado_negativo / null+fecha
 
 1. **Notificación al operador** — cuando llega mensaje nuevo (email o Pusher — parcialmente implementado)
 2. **Escenario Make para `[ALERTA:cambio_monto]`** — detectar el tag en el inbound y crear tarea en SF/Notion con los datos del donante
-3. **Outbound Genaro** — escenario Make + templates + SOQL para ex-donantes
-4. **Bot de bienvenida** — nuevos donantes
-5. **SF Connected App** — reemplazar webhook `wl` por consulta directa a SF
-6. **Rate limiting / deduplicación** — robustez para mensajes duplicados de Twilio
-7. **Reset mensual automático** `cerrado_positivo` — escenario Make día 1
+3. **SF Connected App** — reemplazar webhook `wl` por consulta directa a SF
+4. **Rate limiting / deduplicación** — robustez para mensajes duplicados de Twilio
+5. **Reset mensual automático** `cerrado_positivo` — escenario Make día 1
 
 ---
 

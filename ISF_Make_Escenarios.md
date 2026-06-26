@@ -1,6 +1,6 @@
 # ISF Bot — Documentación de Escenarios Make
 **Versión:** Junio 2026  
-**Contexto:** Todos los escenarios se conectan a Salesforce NPC, Twilio WhatsApp Business, y la API de Anthropic (Claude Sonnet 4.6).
+**Contexto:** Todos los escenarios se conectan a Salesforce NPC, Twilio WhatsApp Business, y la API de Anthropic (Claude Opus 4.8).
 
 ---
 
