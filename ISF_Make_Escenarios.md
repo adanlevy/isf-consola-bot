@@ -361,50 +361,56 @@ Si ninguna se cumple, el registro se descarta (caso a bloquear: episodio de Gena
 
 ## ESCENARIO 2C — ISF Outbound Lucero (Bienvenida)
 
-**Propósito:** Dar la bienvenida a un donante **nuevo** apenas se crea su donación recurrente. Es un **único envío proactivo** (no hay graduación ni segundo toque). Si el donante responde, Lucero conversa en la ventana de 24h (escenario 1 inbound, path bienvenida — pendiente de sumar). El disparo no es por cron sino por evento: un Flow de Salesforce dispara el webhook al crearse la Recurring Donation.
+**Propósito:** Dar la bienvenida a un donante **nuevo** apenas se crea su donación recurrente. Es un **único envío proactivo** (no hay graduación ni segundo toque). El disparo no es por cron sino por evento: un Flow de Salesforce (Record-Triggered, "a record is created" en `npe03__Recurring_Donation__c`) dispara el webhook vía un HTTP Callout.
+
+**No hay bot de inbound separado.** Si el donante responde la bienvenida, lo toma **Maitena** (escenario 1 inbound, path donante activo) — ya tiene todo el contexto (proyectos, organización, cobros). No existe un prompt ni un escenario de inbound de Lucero.
 
 **Categoría WhatsApp:** los templates se registran en Meta como **Marketing** (bienvenida + video institucional + invitación a redes). No registrar como utility.
 
-**Bienvenida de un solo paso:** sin `WhatsApp_Intentos__c`, sin `effective_intentos`, sin campo de "paso". El único campo de control del flujo es `Bienvenida_Estado__c`.
+**Bienvenida de un solo paso:** sin `WhatsApp_Intentos__c`, sin `effective_intentos`, sin router. El estado se marca en `WhatsApp_Estado__c = 'bienvenida'` (reutiliza el campo de Maitena, no hay campo `Bienvenida_Estado__c`).
+
+### Disparo desde Salesforce (Flow + HTTP Callout)
+- **Named Credential:** `Make Lucero Outbound` (External Credential `Make Lucero EC`, sin auth, con un Principal `Named Principal`, "Allow Formulas in HTTP Body" activado, "Generate Authorization Header" desactivado). URL base: `https://hook.us1.make.com`.
+- **HTTP Callout** (`Send Whatsapp Welcome`): POST al path del webhook, body `{"recurringDonationId": "{!$Record.Id}"}`. El Webhook Response de Make debe devolver `200` + body `{"status":"ok"}` + header `Content-Type: application/json`, y el schema en SF se captura con **"Connect for Schema"** (con el escenario de Make en "Run once" activo).
+- **Flow:** Record-Triggered en `npe03__Recurring_Donation__c`, "a record is created", path asíncrono → llama al HTTP Callout pasando `{!$Record.Id}`.
 
 ### Módulos
 
 | # | Tipo | Descripción |
 |---|---|---|
-| 1 | Webhooks — Custom Webhook | Recibe el POST del Flow de SF (Id de la Recurring Donation o del Contact) |
-| 2 | Tools — Sleep | Espera X horas (para que `EmailBouncedDate` se registre en SF tras el envío del email de bienvenida) |
-| 3 | Salesforce — Search Records | Re-lee el donante (datos frescos, incluido `EmailBouncedDate`) |
-| 4 | Tools — Set Variable | `medioPago` — arma el string del medio de pago (= `{{3}}` del template) |
-| 5 | Router | Ruta A: `EmailBouncedDate` vacío / Ruta B: `EmailBouncedDate` con fecha |
-| 6A | HTTP — Twilio | Envía `isf_bienvenida_dia0_emailok` |
-| 6B | HTTP — Twilio | Envía `isf_bienvenida_dia0_emailbounce` |
-| 7 | Salesforce — Update a Record | Un solo update post-envío (historial + estado + último envío) |
+| 1 | Salesforce — Make an API Call | Re-lee el donante (datos frescos, incluido `EmailBouncedDate`) |
+| (resp.) | Webhooks — Webhook Response | `200` + `{"status":"ok"}` + `Content-Type: application/json` (primer módulo, antes del sleep) |
+| 2 | Tools — Sleep | Espera ~2 horas (para que `EmailBouncedDate` se registre en SF tras el envío del email de bienvenida) |
+| 3 | HTTP — Twilio | Envía el template (ContentSid resuelto con `if` según `EmailBouncedDate`) |
+| 4 | Salesforce — Update a Record | Update post-envío (historial + estado) |
 
-### SOQL / Search Records (módulo 3)
+> Nota: el módulo de re-lectura de SF es el **`1`** en este escenario; todas las referencias a campos son `{{1.body.records[].campo}}`.
+
+### SOQL / Make an API Call (módulo 1)
+**Endpoint:** `GET /services/data/v59.0/query?q=`
 ```sql
-SELECT Id, ISFAR_Id_18_digitos__c,
-       npe03__Contact__r.FirstName, npe03__Contact__r.LastName,
-       npe03__Contact__r.MobilePhone, npe03__Contact__r.Email,
-       npe03__Contact__r.EmailBouncedDate,
-       npe03__Amount__c, Medio_de_pago__c,
+SELECT Id, npe03__Contact__r.FirstName, npe03__Contact__r.Email,
+       npe03__Contact__r.EmailBouncedDate, npe03__Contact__r.MobilePhone,
+       npe03__Amount__c, medio_de_pago_para_email__c,
        ISFAR_ultimos_4_digitos_tarjeta_cbu__c,
-       npe03__Date_Established__c, npe03__Next_Payment_Date__c,
-       Bienvenida_Estado__c,
        WhatsApp_Historial__c, WhatsApp_Historial_Archivo__c
 FROM npe03__Recurring_Donation__c
-WHERE Id = '{{1.recurringDonationId}}'
-LIMIT 1
+WHERE Id = '{{1.recurringDonationId}}' LIMIT 1
 ```
 
-### Variante por rebote de email (Router módulo 5)
-- Sin router — el ContentSid se resuelve con un `if` directo en el módulo HTTP de Twilio:
+### ContentSid (módulo HTTP Twilio) — sin router, `if` directo
 ```
 {{if(1.body.records[].npe03__Contact__r.EmailBouncedDate = null; "HXcec64cccdac1e6a3419e4af16d0f37f1"; "HX584717a9f72e3b796c4228a1c6611944")}}
 ```
 - `null` → emailok (`HXcec64cccdac1e6a3419e4af16d0f37f1`)
 - con fecha → emailbounce (`HX584717a9f72e3b796c4228a1c6611944`)
 
-### ContentVariables Twilio (ambas rutas)
+### To (módulo HTTP Twilio)
+```
+whatsapp:+54{{1.body.records[].npe03__Contact__r.MobilePhone}}
+```
+
+### ContentVariables Twilio
 ```json
 {
   "nombre":     "{{1.body.records[].npe03__Contact__r.FirstName}}",
@@ -415,29 +421,33 @@ LIMIT 1
 }
 ```
 
-### Update post-envío (módulo 7) — escribe en SF para que la consola lo tome
+### Update post-envío (módulo 4) — escribe en SF para que la consola lo tome
 
-**`WhatsApp_Historial__c`** (episodio — se inyecta en el prompt de Lucero en el inbound):
-```
-[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: Hola {{3.npe03__Contact__r.FirstName}}, soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. Te damos la bienvenida a la comunidad! Quería confirmarte que recibimos tu donación de ${{3.npe03__Amount__c}} mensuales a través de tu {{var.medioPago}} que finaliza en {{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}. Gracias por sumarte. Te comparto este video: https://www.youtube.com/watch?v=cVMsURwWWQU {{if(isEmpty(3.npe03__Contact__r.EmailBouncedDate); "Te enviamos un email de bienvenida a " + 3.npe03__Contact__r.Email + ". ¿Es correcto?"; "Intentamos enviarte el email de bienvenida a " + 3.npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo?")}}
-```
+> **Importante:** los saltos de línea se arman con `+ newline +` (Make NO interpreta `\n`). El texto se replica fiel al template enviado (Opción B), con el `if` decidiendo la frase final según el rebote.
 
-**`WhatsApp_Historial_Archivo__c`** (completo — lo ve el operador en la consola):
+**`WhatsApp_Historial__c`** (episodio — sin prepend, donante nuevo):
 ```
-{{3.WhatsApp_Historial_Archivo__c + newline}}[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: Hola {{3.npe03__Contact__r.FirstName}}, soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. Te damos la bienvenida a la comunidad! Quería confirmarte que recibimos tu donación de ${{3.npe03__Amount__c}} mensuales a través de tu {{var.medioPago}} que finaliza en {{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}. Gracias por sumarte. Te comparto este video: https://www.youtube.com/watch?v=cVMsURwWWQU {{if(isEmpty(3.npe03__Contact__r.EmailBouncedDate); "Te enviamos un email de bienvenida a " + 3.npe03__Contact__r.Email + ". ¿Es correcto?"; "Intentamos enviarte el email de bienvenida a " + 3.npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo?")}}
+[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: {{"Hola " + 1.body.records[].npe03__Contact__r.FirstName + " 👋" + newline + newline + "Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!" + newline + newline + "Quería confirmarte que recibimos tu donación de $" + 1.body.records[].npe03__Amount__c + " mensuales a través de tu " + 1.body.records[].medio_de_pago_para_email__c + " que finaliza en " + 1.body.records[].ISFAR_ultimos_4_digitos_tarjeta_cbu__c + ". Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙" + newline + newline + "Para que nos conozcas un poco más de cerca, te comparto este video cortito:" + newline + "https://www.youtube.com/watch?v=cVMsURwWWQU" + newline + newline + if(1.body.records[].npe03__Contact__r.EmailBouncedDate = null; "Te enviamos un email de bienvenida a " + 1.body.records[].npe03__Contact__r.Email + ". ¿Es correcto? Cualquier duda o corrección, respondé este mensaje, estoy acá para ayudarte."; "Te quería comentar que intentamos enviarte el email de bienvenida a " + 1.body.records[].npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo así te mantenemos al tanto de todo? 🙏")}}
 ```
 
-**`WhatsApp_UltimoEnvio__c`** (datetime): `{{now}}`
+**`WhatsApp_Historial_Archivo__c`** (completo — con prepend):
+```
+{{1.body.records[].WhatsApp_Historial_Archivo__c + newline}}[{{formatDate(now; "DD/MM HH:mm")}}] LUCERO: {{"Hola " + 1.body.records[].npe03__Contact__r.FirstName + " 👋" + newline + newline + "Soy Lucero, del equipo de Ingeniería Sin Fronteras Argentina. ¡Te damos la bienvenida a la comunidad!" + newline + newline + "Quería confirmarte que recibimos tu donación de $" + 1.body.records[].npe03__Amount__c + " mensuales a través de tu " + 1.body.records[].medio_de_pago_para_email__c + " que finaliza en " + 1.body.records[].ISFAR_ultimos_4_digitos_tarjeta_cbu__c + ". Tu apoyo nos permite llevar adelante proyectos que mejoran la vida de comunidades en situación de vulnerabilidad en todo el país. Gracias por sumarte 💙" + newline + newline + "Para que nos conozcas un poco más de cerca, te comparto este video cortito:" + newline + "https://www.youtube.com/watch?v=cVMsURwWWQU" + newline + newline + if(1.body.records[].npe03__Contact__r.EmailBouncedDate = null; "Te enviamos un email de bienvenida a " + 1.body.records[].npe03__Contact__r.Email + ". ¿Es correcto? Cualquier duda o corrección, respondé este mensaje, estoy acá para ayudarte."; "Te quería comentar que intentamos enviarte el email de bienvenida a " + 1.body.records[].npe03__Contact__r.Email + " pero nos rebotó. ¿Nos corregirías el correo así te mantenemos al tanto de todo? 🙏")}}
+```
 
-**`Bienvenida_Estado__c`**: `bienvenida`
+**`WhatsApp_Estado__c`**: `bienvenida`
+
+**`WhatsApp_Fecha_Bienvenida__c`** (datetime — hito de envío): `{{now}}`
+
+> **No se setea `WhatsApp_UltimoEnvio__c`** — así, si el primer débito falla, Maitena lo toma en su próxima corrida sin esperar los 4 días (donante en caliente).
 
 ### Notas de diseño
 
-- **El texto del historial es la versión compacta** (una línea, sin los saltos del template real). El template de Twilio lleva su formato completo con saltos de línea; el historial se compacta para leerse bien en el prompt de Claude en el inbound y en la consola.
-- **`isEmpty(EmailBouncedDate)`** decide la frase final del historial igual que el router decide el template — así el registro refleja exactamente lo que se envió. Verificar que en la cuenta la función sea `isEmpty()`.
-- **`{{var.medioPago}}`** se arma en el módulo 4 con la misma lógica que alimenta `ContentVariables.3`, para que el texto del Twilio y el del historial coincidan exactamente.
-- **Sin prepend del historial episódico** — un donante nuevo arranca con el episodio vacío.
-- **Anticolisión con Maitena:** el SOQL outbound de Maitena (escenario 2) debe excluir donantes con episodio de bienvenida activo (`Bienvenida_Estado__c` en `bienvenida` / `en_conversacion`). Si el primer débito del donante nuevo efectivamente falla en SF, ese caso lo retoma Maitena por su propio circuito; Lucero no lo dispara.
+- **`= null` en lugar de `isEmpty()`** — Make no tiene `isEmpty`; el chequeo correcto del rebote es `EmailBouncedDate = null`.
+- **Saltos de línea con `newline`** — `\n` NO funciona en campos de texto de Make; se concatena `+ newline +`. Mismo patrón que el outbound de Maitena.
+- **Maitena toma la conversación** si el donante responde — el inbound (escenario 1) ya lo cubre porque el donante tiene `Open_Ended_Status = 'Open'`. No hace falta prompt ni escenario de Lucero inbound.
+- **Anticolisión con Maitena (sin cambios al SOQL):** los donantes nuevos tienen `Estado_Donante__c != 'Rechazada'`, así que el outbound de Maitena (que filtra `Estado_Donante__c = 'Rechazada'`) no los toca. Recién cuando un débito falla y SF marca `'Rechazada'`, Maitena los recupera — que es lo deseado. `WhatsApp_Estado__c = 'bienvenida'` no está en la lista de exclusión de Maitena, pero `Estado_Donante__c` ya los protege.
+- **Consola:** los donantes en `bienvenida` aparecen en la vista Rechazos/Bienvenidas, tab **Iniciados**, con badge "Bienvenida". El SOQL del webhook `wl` incluye `'bienvenida'` en el `IN` de `WhatsApp_Estado__c`.
 
 ---
 
