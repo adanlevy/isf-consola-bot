@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.63</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.65</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -408,9 +408,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="app">
   <div class="sidebar">
     <div class="view-switch">
-      <button class="view-btn active" data-view="rechazos" onclick="switchView('rechazos')">Rechazos</button>
+      <button class="view-btn active" data-view="rechazos" onclick="switchView('rechazos')">Rechazos/Bienvenidas</button>
       <button class="view-btn" data-view="reactivacion" onclick="switchView('reactivacion')">Reactivación</button>
-      <button class="view-btn" data-view="bienvenida" onclick="switchView('bienvenida')">Bienvenida</button>
     </div>
     <div class="sidebar-top">
       <div class="tabs" id="tabs-main">
@@ -420,12 +419,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="tab" onclick="switchTab('en_conversacion',this)"><span class="tab-n" id="cnt-ec">—</span>En conv.</button>
         <button class="tab" onclick="switchTab('programadas',this)"><span class="tab-n" id="cnt-pr">—</span>Program.</button>
         <button class="tab" id="tab-iniciados" onclick="switchTab('primer_envio',this)" oncontextmenu="openBulkLiberate(event)" data-longpress="0"><span class="tab-n" id="cnt-pe">—</span>Iniciados</button>
-      </div>
-      <div class="tabs" id="tabs-bienv" style="display:none">
-        <button class="tab active" onclick="switchTab('b_enviada',this)"><span class="tab-n" id="cnt-b-env">—</span>Enviada</button>
-        <button class="tab" onclick="switchTab('b_enconv',this)"><span class="tab-n" id="cnt-b-ec">—</span>En conv.</button>
-        <button class="tab" onclick="switchTab('b_humano',this)"><span class="tab-n" id="cnt-b-h">—</span>Humano</button>
-        <button class="tab" onclick="switchTab('b_final',this)"><span class="tab-n" id="cnt-b-fin">—</span>Finalizada</button>
       </div>
     </div>
     <div class="tab-tags" id="tab-tags"></div>
@@ -477,30 +470,21 @@ function toggleTheme(){
 })();
 function scopedDonors(){
   return donors.filter(d=>{
-    if(viewMode==='bienvenida'){
-      // vista de seguimiento: donantes con un episodio de bienvenida activo o cerrado
-      return !!d.bienvenida_estado;
-    }
     if(viewMode==='reactivacion'){
       if(d.open_status!=='Closed') return false;
       // excluir episodios de Maitena (inicio <= baja)
       if(d.fecha_inicio_episodio&&d.fecha_baja&&new Date(d.fecha_inicio_episodio)<=new Date(d.fecha_baja)) return false;
       return true;
     }
+    // Rechazos/Bienvenidas: donantes activos (incluye estado 'bienvenida')
     return d.open_status!=='Closed';
   });
 }
-// Tabs de la vista Bienvenida → valor de Bienvenida_Estado__c que representan
-const BIENV_TABS={b_enviada:'bienvenida',b_enconv:'en_conversacion',b_humano:'derivado_humano',b_final:'finalizado'};
 function switchView(mode){
   viewMode=mode;
   document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));
-  const isBienv=mode==='bienvenida';
-  document.getElementById('tabs-main').style.display=isBienv?'none':'flex';
-  document.getElementById('tabs-bienv').style.display=isBienv?'flex':'none';
   // resetear a un tab válido de la vista
-  tab=isBienv?'b_enviada':'derivado_humano';
-  document.querySelectorAll('#tabs-bienv .tab').forEach((x,i)=>x.classList.toggle('active',i===0));
+  tab='derivado_humano';
   document.querySelectorAll('#tabs-main .tab').forEach((x,i)=>x.classList.toggle('active',i===0));
   updateCounts(scopedDonors());renderTabTags();renderList();
 }
@@ -682,14 +666,7 @@ function lastMessageIsTemplate(historial){
 }
 
 function pillInfo(d){
-  if(viewMode==='bienvenida'){
-    const b=d.bienvenida_estado;
-    if(b==='bienvenida')return['pec','ti-send','Bienvenida enviada'];
-    if(b==='en_conversacion')return['pec','ti-message-chatbot','Lucero conversando'];
-    if(b==='derivado_humano')return['ph','ti-user','Con humano'];
-    if(b==='finalizado')return['pp','ti-check','Finalizada'];
-    return['ph','ti-circle','Activo'];
-  }
+  if(d.estado==='bienvenida')return['pec','ti-heart-handshake','Bienvenida enviada'];
   if(d.estado==='derivado_humano')return['ph','ti-user','Con humano'];
   if(d.estado==='cerrado_positivo')return['pp','ti-check','Cerrado positivo — chequear'];
   if(d.estado==='cerrado_negativo')return['pn','ti-x','Cerrado negativo'];
@@ -700,11 +677,6 @@ function pillInfo(d){
 }
 function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';if(e==='en_conversacion'||e==='primer_envio')return'bec';return'br'}
 function botStatusBadge(d){
-  if(viewMode==='bienvenida'){
-    if(d.bienvenida_estado==='derivado_humano')return['bot-off','ti-robot-off','Lucero desactivado'];
-    if(d.bienvenida_estado==='finalizado')return['bot-off','ti-robot-off','Bienvenida finalizada'];
-    return['bot-on','ti-robot','Lucero activo'];
-  }
   const botName=viewMode==='reactivacion'?'Genaro':'Maitena';
   if(d.estado==='derivado_humano')return['bot-off','ti-robot-off',botName+' desactivada'];
   return['bot-on','ti-robot',botName+' activa'];
@@ -785,20 +757,12 @@ function renderTabTags(){
   el.style.display=tags.length?'flex':'none';
 }
 function updateCounts(d){
-  if(viewMode==='bienvenida'){
-    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-    set('cnt-b-env',d.filter(x=>x.bienvenida_estado==='bienvenida').length);
-    set('cnt-b-ec',d.filter(x=>x.bienvenida_estado==='en_conversacion').length);
-    set('cnt-b-h',d.filter(x=>x.bienvenida_estado==='derivado_humano').length);
-    set('cnt-b-fin',d.filter(x=>x.bienvenida_estado==='finalizado').length);
-    return;
-  }
   document.getElementById('cnt-h').textContent=d.filter(x=>x.estado==='derivado_humano').length;
   document.getElementById('cnt-n').textContent=d.filter(x=>x.estado==='cerrado_negativo').length;
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
   const ecEl=document.getElementById('cnt-ec');if(ecEl)ecEl.textContent=d.filter(x=>x.estado==='en_conversacion').length;
   const prEl=document.getElementById('cnt-pr');if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
-  const peEl=document.getElementById('cnt-pe');if(peEl)peEl.textContent=d.filter(x=>x.estado==='primer_envio'||x.estado==='reactivacion').length;
+  const peEl=document.getElementById('cnt-pe');if(peEl)peEl.textContent=d.filter(x=>x.estado==='primer_envio'||x.estado==='reactivacion'||x.estado==='bienvenida').length;
 }
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderTabTags();renderList();if(window.innerWidth<=768)goBack();}
 
@@ -829,11 +793,9 @@ function renderList(){
       const tagText=d.whatsapp_error?'sin entrega':'';
       return name.includes(searchQuery.toLowerCase())||phone.includes(q)||badge.includes(searchQuery.toLowerCase())||tagText.includes(searchQuery.toLowerCase());
     });
-  } else if(viewMode==='bienvenida'){
-    base=scoped.filter(d=>d.bienvenida_estado===BIENV_TABS[tab]);
   } else {
     base=tab==='programadas'?scoped.filter(d=>d.liberar_en&&!d.estado):
-         tab==='primer_envio'?scoped.filter(d=>d.estado==='primer_envio'||d.estado==='reactivacion'):
+         tab==='primer_envio'?scoped.filter(d=>d.estado==='primer_envio'||d.estado==='reactivacion'||d.estado==='bienvenida'):
          scoped.filter(d=>d.estado===tab);
   }
   const filtered=[...base].sort((a,b)=>{
@@ -876,6 +838,8 @@ function renderList(){
 
 function donorBadge(d){
   const badges=[];
+  if(d.estado==='bienvenida')
+    badges.push('<span style="display:inline-flex;align-items:center;gap:2px;background:#e0e7ff;color:#4338ca;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-heart-handshake" style="font-size:8px"></i> Bienvenida</span>');
   if(d.estado_donante==='Normal')
     badges.push('<span style="display:inline-flex;align-items:center;gap:2px;background:#dcfce7;color:#15803d;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-star-filled" style="font-size:8px"></i> Normal</span>');
   if(d.fecha_mod_tarjeta&&d.fecha_inicio_episodio&&new Date(d.fecha_mod_tarjeta)>=new Date(d.fecha_inicio_episodio))
@@ -889,7 +853,7 @@ function isRecuperado(d){
 function mapRecord(r){return{
   id:r.Id,name:`${r.npe03__Contact__r?.FirstName||''} ${r.npe03__Contact__r?.LastName||''}`.trim(),
   phone:(r.npe03__Contact__r?.MobilePhone||'').replace(/^0/,''),
-  estado:r.WhatsApp_Estado__c,bienvenida_estado:r.Bienvenida_Estado__c||null,monto:r.npe03__Amount__c,medio_pago:r.Medio_de_pago__c,
+  estado:r.WhatsApp_Estado__c,monto:r.npe03__Amount__c,medio_pago:r.Medio_de_pago__c,
   antiguedad_meses:calcMeses(r.npe03__Date_Established__c),intentos:r.WhatsApp_Intentos__c||0,
   liberar_en:r.Whatsapp_Liberar_en__c,historial:r.WhatsApp_Historial_Archivo__c||'',
   nombre:r.npe03__Contact__r?.FirstName||'',
