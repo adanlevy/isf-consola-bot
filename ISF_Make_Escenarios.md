@@ -437,7 +437,7 @@ whatsapp:+54{{1.body.records[].npe03__Contact__r.MobilePhone}}
 
 **`WhatsApp_Estado__c`**: `bienvenida`
 
-**`WhatsApp_Fecha_Bienvenida__c`** (datetime — hito de envío): `{{now}}`
+**`WhatsApp_Fecha_Bienvenida__c`** (Date — hito de envío): `{{formatDate(now; "YYYY-MM-DD")}}`
 
 > **No se setea `WhatsApp_UltimoEnvio__c`** — así, si el primer débito falla, Maitena lo toma en su próxima corrida sin esperar los 4 días (donante en caliente).
 
