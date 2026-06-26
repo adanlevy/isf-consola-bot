@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.65</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.67</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -762,7 +762,7 @@ function updateCounts(d){
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
   const ecEl=document.getElementById('cnt-ec');if(ecEl)ecEl.textContent=d.filter(x=>x.estado==='en_conversacion').length;
   const prEl=document.getElementById('cnt-pr');if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
-  const peEl=document.getElementById('cnt-pe');if(peEl)peEl.textContent=d.filter(x=>x.estado==='primer_envio'||x.estado==='reactivacion'||x.estado==='bienvenida').length;
+  const peEl=document.getElementById('cnt-pe');if(peEl)peEl.textContent=d.filter(x=>x.estado==='primer_envio'||x.estado==='reactivacion'||bienvenidaActiva(x)).length;
 }
 function switchTab(t,el){tab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderTabTags();renderList();if(window.innerWidth<=768)goBack();}
 
@@ -795,7 +795,7 @@ function renderList(){
     });
   } else {
     base=tab==='programadas'?scoped.filter(d=>d.liberar_en&&!d.estado):
-         tab==='primer_envio'?scoped.filter(d=>d.estado==='primer_envio'||d.estado==='reactivacion'||d.estado==='bienvenida'):
+         tab==='primer_envio'?scoped.filter(d=>d.estado==='primer_envio'||d.estado==='reactivacion'||bienvenidaActiva(d)):
          scoped.filter(d=>d.estado===tab);
   }
   const filtered=[...base].sort((a,b)=>{
@@ -865,8 +865,17 @@ function mapRecord(r){return{
   fecha_mod_tarjeta:r.Fecha_modificacion_Nro_Tarjeta_o_CBU__c||null,
   fecha_inicio_episodio:r.WhatsApp_FechaInicioEpisodio__c||null,
   whatsapp_error:r.npe03__Contact__r?.Whatsapp_Error__c||false,
-  ultimo_pago:r.npe03__Last_Payment_Date__c||null
+  ultimo_pago:r.npe03__Last_Payment_Date__c||null,
+  fecha_bienvenida:r.WhatsApp_Fecha_Bienvenida__c||null
 }}
+
+// Una bienvenida se considera "activa" en la consola solo durante los primeros 30 días.
+// Pasado ese tiempo el donante ya transitó su primer mes y deja de mostrarse como bienvenida.
+function bienvenidaActiva(d){
+  if(d.estado!=='bienvenida')return false;
+  if(!d.fecha_bienvenida)return true; // sin fecha → mostrarla por las dudas
+  return (Date.now()-new Date(d.fecha_bienvenida).getTime())/86400000 <= 30;
+}
 
 async function loadAll(){
   const c=cfg();const list=document.getElementById('donor-list');
