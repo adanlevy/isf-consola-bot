@@ -11,7 +11,7 @@
 - **Categoría:** UTILITY. Meta los aprobó como Utility porque el núcleo del mensaje es la confirmación de una transacción (la donación que se debita). Es más barato que Marketing (~$0.026 vs ~$0.06 en AR). ⚠️ Meta puede recategorizar a Marketing más adelante si considera el contenido promocional — si eso pasa, no es un error de configuración.
 - **Lucero hace un solo envío proactivo:** el template de bienvenida (día 0). No hay graduación ni segundo toque. Si el donante responde, lo toma **Maitena** en la conversación (no hay inbound ni prompt separado de Lucero).
 - **El template de bienvenida tiene dos variantes** según el resultado del chequeo de email en Salesforce (`EmailBouncedDate`): `_emailok` (no rebotó) y `_emailbounce` (rebotó). Make elige cuál enviar tras el sleep.
-- **YouTube preview:** se genera automáticamente en WhatsApp cuando la URL está sola en una línea del body. No usar header multimedia separado.
+- **Header multimedia:** los templates llevan una imagen de header (miniatura del spot de ISF-Ar). El link de YouTube va igual en el body, pero como es un template NO genera preview nativo de YouTube (el preview solo aparece en mensajes de sesión); por eso se usa la imagen de header.
 - **Sender:** el número de WhatsApp Business de ISF-Ar (el mismo que Maitena y Genaro).
 - **Trigger Make:** Lucero día 0 — enviado unas horas después de la creación de la Recurring Donation en SF (para que el email bounce haya tenido tiempo de registrarse).
 
@@ -27,7 +27,7 @@
 ---
 
 ## Template 1A — `isf_bienvenida_dia0_emailok`
-**ContentSid:** `HXcec64cccdac1e6a3419e4af16d0f37f1`
+**ContentSid:** `HX2368ef6dfa68ed15e15aa7579c319171`
 
 **Cuándo se usa:** Día 0 del episodio Lucero — email NO rebotado (`EmailBouncedDate` = null). Caso normal.
 
@@ -58,7 +58,7 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ---
 
 ## Template 1B — `isf_bienvenida_dia0_emailbounce`
-**ContentSid:** `HX584717a9f72e3b796c4228a1c6611944`
+**ContentSid:** `HX50bfb54c44025cb64b6ae19b28ecbdc9`
 
 **Cuándo se usa:** Día 0 del episodio Lucero — email rebotado (`EmailBouncedDate` ≠ null). Make detecta el bounce y envía esta variante.
 
@@ -91,7 +91,7 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 ## Notas de implementación
 
 ### Registro en Twilio Content Template Builder / Meta
-1. Registrar las 2 variantes del template de bienvenida (1A y 1B). **Content type = Text** (sin media header — el video se previsualiza solo con la URL en el body).
+1. Registrar las 2 variantes del template de bienvenida (1A y 1B) con **header de imagen** (miniatura del spot) + body de texto.
 2. Categoría: **UTILITY** para ambas. **Language:** `es_AR`.
 3. Aprobación Meta: 1–3 días.
 4. Guardar el `ContentSid` (`HXxxxx…`) de cada template — se configuran en Make.
@@ -101,13 +101,13 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 - **Inbound:** si el donante responde, lo toma **Maitena** (escenario 1 inbound, path donante activo). No hay prompt ni escenario de inbound de Lucero.
 - No hay segundo envío programado (graduación eliminada).
 
-### Construcción de `{{3}}` y `{{4}}` (medio de pago)
-`{{3}}` es la descripción y `{{4}}` los últimos 4 dígitos. El texto del body dice "tu {{3}} que finaliza en {{4}}".
+### Construcción de `{{medio_pago}}` y `{{ultimos4}}`
+`{{medio_pago}}` viene del campo SF `medio_de_pago_para_email__c` (ya compone "tarjeta Visa Crédito", o "CBU" si es débito bancario). El texto del body dice "tu {{medio_pago}} que finaliza en {{ultimos4}}".
 
-| Condición SF | `{{3}}` | `{{4}}` |
+| Condición SF | `{{medio_pago}}` | `{{ultimos4}}` |
 |---|---|---|
 | Tarjeta de crédito Visa | `tarjeta Visa Crédito` | últimos 4 de la tarjeta |
 | Tarjeta de crédito Mastercard | `tarjeta Mastercard Crédito` | últimos 4 de la tarjeta |
 | Tarjeta de débito | `tarjeta de débito` | últimos 4 de la tarjeta |
 
-> ⚠️ **Caso CBU pendiente:** "que finaliza en {{4}}" no aplica a débito bancario por CBU. Si hay donantes por CBU hay que registrar una 4ta variante sin tarjeta (texto: "a través de débito bancario (CBU)"). Por ahora se asume tarjeta.
+> ⚠️ **Caso CBU pendiente:** "que finaliza en {{ultimos4}}" no aplica a débito bancario por CBU. Si hay donantes por CBU habría que registrar una variante sin tarjeta. Por ahora se asume tarjeta.

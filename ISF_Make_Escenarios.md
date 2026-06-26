@@ -400,10 +400,10 @@ WHERE Id = '{{1.recurringDonationId}}' LIMIT 1
 
 ### ContentSid (módulo HTTP Twilio) — sin router, `if` directo
 ```
-{{if(1.body.records[].npe03__Contact__r.EmailBouncedDate = null; "HXcec64cccdac1e6a3419e4af16d0f37f1"; "HX584717a9f72e3b796c4228a1c6611944")}}
+{{if(1.body.records[].npe03__Contact__r.EmailBouncedDate = null; "HX2368ef6dfa68ed15e15aa7579c319171"; "HX50bfb54c44025cb64b6ae19b28ecbdc9")}}
 ```
-- `null` → emailok (`HXcec64cccdac1e6a3419e4af16d0f37f1`)
-- con fecha → emailbounce (`HX584717a9f72e3b796c4228a1c6611944`)
+- `null` → emailok (`HX2368ef6dfa68ed15e15aa7579c319171`)
+- con fecha → emailbounce (`HX50bfb54c44025cb64b6ae19b28ecbdc9`)
 
 ### To (módulo HTTP Twilio)
 ```
