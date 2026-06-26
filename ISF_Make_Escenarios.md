@@ -403,11 +403,11 @@ LIMIT 1
 ### ContentVariables Twilio (ambas rutas)
 ```json
 {
-  "nombre":     "{{3.npe03__Contact__r.FirstName}}",
-  "monto":      "{{3.npe03__Amount__c}}",
-  "medio_pago": "{{var.medioPago}}",
-  "ultimos4":   "{{3.ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}",
-  "email":      "{{3.npe03__Contact__r.Email}}"
+  "nombre":     "{{1.body.records[].npe03__Contact__r.FirstName}}",
+  "monto":      "{{1.body.records[].npe03__Amount__c}}",
+  "medio_pago": "{{1.body.records[].medio_de_pago_para_email__c}}",
+  "ultimos4":   "{{1.body.records[].ISFAR_ultimos_4_digitos_tarjeta_cbu__c}}",
+  "email":      "{{1.body.records[].npe03__Contact__r.Email}}"
 }
 ```
 
