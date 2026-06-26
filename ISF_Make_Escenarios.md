@@ -365,7 +365,7 @@ Si ninguna se cumple, el registro se descarta (caso a bloquear: episodio de Gena
 
 **No hay bot de inbound separado.** Si el donante responde la bienvenida, lo toma **Maitena** (escenario 1 inbound, path donante activo) — ya tiene todo el contexto (proyectos, organización, cobros). No existe un prompt ni un escenario de inbound de Lucero.
 
-**Categoría WhatsApp:** los templates se registran en Meta como **Marketing** (bienvenida + video institucional + invitación a redes). No registrar como utility.
+**Categoría WhatsApp:** Meta aprobó los templates como **Utility** (el núcleo es la confirmación de la transacción/donación). Más barato que Marketing. Meta podría recategorizar a Marketing más adelante si lo considera promocional.
 
 **Bienvenida de un solo paso:** sin `WhatsApp_Intentos__c`, sin `effective_intentos`, sin router. El estado se marca en `WhatsApp_Estado__c = 'bienvenida'` (reutiliza el campo de Maitena, no hay campo `Bienvenida_Estado__c`).
 

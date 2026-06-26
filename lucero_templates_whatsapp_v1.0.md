@@ -1,14 +1,14 @@
 # Templates de WhatsApp — Bot Lucero (Bienvenida)
 **Versión:** 1.2  
 **Fecha:** Junio 2026  
-**Categoría Meta:** MARKETING  
+**Categoría Meta:** UTILITY (aprobados por Meta como Utility)  
 **Idioma:** es_AR (Argentina)
 
 ---
 
 ## Notas de registro
 
-- **Categoría:** MARKETING para todos. Incluyen video institucional, bienvenida e invitación a redes → Meta los clasifica como Marketing. No registrar como Utility (los recategorizan).
+- **Categoría:** UTILITY. Meta los aprobó como Utility porque el núcleo del mensaje es la confirmación de una transacción (la donación que se debita). Es más barato que Marketing (~$0.026 vs ~$0.06 en AR). ⚠️ Meta puede recategorizar a Marketing más adelante si considera el contenido promocional — si eso pasa, no es un error de configuración.
 - **Lucero hace un solo envío proactivo:** el template de bienvenida (día 0). No hay graduación ni segundo toque. Si el donante responde, Lucero sigue conversando normalmente (inbound) y maneja derivaciones/alertas.
 - **El template de bienvenida tiene dos variantes** según el resultado del chequeo de email en Salesforce (`EmailBouncedDate`): `_emailok` (no rebotó) y `_emailbounce` (rebotó). Make elige cuál enviar tras el sleep.
 - **YouTube preview:** se genera automáticamente en WhatsApp cuando la URL está sola en una línea del body. No usar header multimedia separado.
@@ -92,7 +92,7 @@ ISF-Ar · socios@isf-argentina.org · 11 5624-8347
 
 ### Registro en Twilio Content Template Builder / Meta
 1. Registrar las 2 variantes del template de bienvenida (1A y 1B). **Content type = Text** (sin media header — el video se previsualiza solo con la URL en el body).
-2. Categoría: **MARKETING** para ambas. **Language:** `es_AR`.
+2. Categoría: **UTILITY** para ambas. **Language:** `es_AR`.
 3. Aprobación Meta: 1–3 días.
 4. Guardar el `ContentSid` (`HXxxxx…`) de cada template — se configuran en Make.
 
