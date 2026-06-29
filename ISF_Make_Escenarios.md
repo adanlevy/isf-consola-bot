@@ -88,11 +88,11 @@ El módulo de envío usa `Make an API Call` a Twilio con body `application/x-www
 - Lunes a viernes < 8am → responder a las 9am del mismo día
 - Resto → enviar ahora
 
-**Formato día de la semana:** `formatDate(now; "d"; "America/Argentina/Buenos_Aires")` → 1=domingo, 2=lunes, 3=martes, 4=miércoles, 5=jueves, 6=viernes, 7=sábado. **Nota:** el formato `"u"` no existe en Make, usar `"d"`.
+**Formato día de la semana:** `formatDate(now; "d"; "America/Argentina/Buenos_Aires")` → **0=domingo, 1=lunes, 2=martes, 3=miércoles, 4=jueves, 5=viernes, 6=sábado** (verificado en la cuenta — NO es 1=domingo). **Nota:** el formato `"u"` no existe en Make, usar `"d"`.
 
 **Body completo:**
 ```
-To={{1.From}}&MessagingServiceSid=MG72d9406a54c75fdc106e7a0995c783e4&Body={{replace(...)}}{{if(((formatDate(now; "H"; "America/Argentina/Buenos_Aires") >= 20 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 5 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 2) | formatDate(now; "d"; "America/Argentina/Buenos_Aires") = 1 | (formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 2 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 6)); "&SendAt=" + formatDate(addDays(now; if(formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") != 1; 0; 1)); "YYYY-MM-DD") + "T12:00:00Z&ScheduleType=fixed"; "")}}
+To={{1.From}}&MessagingServiceSid=MG72d9406a54c75fdc106e7a0995c783e4&Body={{replace(...)}}{{if(((formatDate(now; "H"; "America/Argentina/Buenos_Aires") >= 20 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 4 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 1) | formatDate(now; "d"; "America/Argentina/Buenos_Aires") = 0 | (formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") >= 1 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") <= 5)); "&SendAt=" + formatDate(addDays(now; if(formatDate(now; "H"; "America/Argentina/Buenos_Aires") < 8 & formatDate(now; "d"; "America/Argentina/Buenos_Aires") != 0; 0; 1)); "YYYY-MM-DD") + "T12:00:00Z&ScheduleType=fixed"; "")}}
 ```
 
 `T12:00:00Z` = 9am Argentina (UTC-3), hardcodeado para evitar errores de offset.
@@ -420,6 +420,18 @@ whatsapp:+54{{1.body.records[].npe03__Contact__r.MobilePhone}}
   "email":      "{{1.body.records[].npe03__Contact__r.Email}}"
 }
 ```
+
+### Franja horaria (SendAt) — solo días hábiles 10–19hs
+El body del HTTP de Twilio es **Custom** (content type `application/x-www-form-urlencoded`), un solo string crudo. Usa `MessagingServiceSid` (no `From`, requisito de Twilio para `SendAt`). Al final del body se agrega este bloque condicional: si está dentro de la franja devuelve `""` (envío inmediato), si no agenda al próximo día hábil 10:00.
+
+> Mapeo de día en esta cuenta: **0=domingo, 1=lunes … 5=viernes, 6=sábado**.
+
+```
+{{if(formatDate(now;"d";"America/Argentina/Buenos_Aires") >= 1 & formatDate(now;"d";"America/Argentina/Buenos_Aires") <= 5 & formatDate(now;"H";"America/Argentina/Buenos_Aires") >= 10 & formatDate(now;"H";"America/Argentina/Buenos_Aires") < 19; ""; "&SendAt=" + formatDate(addDays(now; if(formatDate(now;"d";"America/Argentina/Buenos_Aires") >= 1 & formatDate(now;"d";"America/Argentina/Buenos_Aires") <= 5 & formatDate(now;"H";"America/Argentina/Buenos_Aires") < 10; 0; if(formatDate(now;"d";"America/Argentina/Buenos_Aires") = 5; 3; if(formatDate(now;"d";"America/Argentina/Buenos_Aires") = 6; 2; 1)))); "YYYY-MM-DD"; "America/Argentina/Buenos_Aires") + "T13:00:00Z&ScheduleType=fixed")}}
+```
+- `T13:00:00Z` = 10:00 Argentina.
+- Día hábil antes de 10 → hoy 10:00 · viernes ≥19 → lunes · sábado → lunes · domingo → lunes · lun–jue ≥19 → mañana.
+- La espera de ~3hs para que `EmailBouncedDate` se asiente se hace en el **Scheduled Path de SF** (3 horas después de crear la donación), no en Make.
 
 ### Update post-envío (módulo 4) — escribe en SF para que la consola lo tome
 
