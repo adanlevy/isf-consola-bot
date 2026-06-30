@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.75</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.77</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -844,7 +844,7 @@ function renderList(){
 
 function donorBadge(d){
   const badges=[];
-  if(bienvenidaActiva(d))
+  if(enPrimerMes(d))
     badges.push('<span style="display:inline-flex;align-items:center;gap:2px;background:#e0e7ff;color:#4338ca;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-heart-handshake" style="font-size:8px"></i> Bienvenida</span>');
   if(d.estado_donante==='Normal')
     badges.push('<span style="display:inline-flex;align-items:center;gap:2px;background:#dcfce7;color:#15803d;border-radius:99px;font-size:9px;font-weight:600;padding:1px 5px"><i class="ti ti-star-filled" style="font-size:8px"></i> Normal</span>');
@@ -880,6 +880,11 @@ function mapRecord(r){return{
 function bienvenidaActiva(d){
   if(d.estado!=='bienvenida')return false;
   if(!d.fecha_bienvenida)return true; // sin fecha → mostrarla por las dudas
+  return (Date.now()-new Date(d.fecha_bienvenida).getTime())/86400000 <= 30;
+}
+// Para el badge: está en su primer mes según la fecha de bienvenida, sin importar el estado.
+function enPrimerMes(d){
+  if(!d.fecha_bienvenida)return false;
   return (Date.now()-new Date(d.fecha_bienvenida).getTime())/86400000 <= 30;
 }
 
