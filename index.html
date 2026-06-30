@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.69</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.71</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -1481,6 +1481,42 @@ function initPusher(){
 if(!cfg().wl)setTimeout(openSettings,400);
 loadAll();
 if(cfg().pk)initPusher();
+
+// ---- Auto-detección de nueva versión ----
+// Compara la versión cargada contra el index.html deployado en GitHub Pages.
+// Si el repo tiene una versión más nueva, muestra un banner para recargar.
+function cmpVer(a,b){
+  const pa=a.split('.').map(Number),pb=b.split('.').map(Number);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=pa[i]||0,y=pb[i]||0;
+    if(x!==y)return x>y?1:-1;
+  }
+  return 0;
+}
+function localVersion(){return (document.getElementById('app-version')?.textContent||'').replace(/^v/,'').trim();}
+function showUpdateBanner(remote){
+  if(document.getElementById('update-banner'))return;
+  const b=document.createElement('div');
+  b.id='update-banner';
+  b.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;font-size:13px';
+  b.innerHTML=`<i class="ti ti-rocket" style="font-size:15px;color:#7dd3fc"></i> Nueva versión disponible (v${remote}) <button onclick="location.reload(true)" style="background:#0ea5e9;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">Actualizar</button> <button onclick="this.parentElement.remove()" style="background:transparent;color:rgba(255,255,255,.6);border:none;cursor:pointer;font-size:16px;line-height:1">×</button>`;
+  document.body.appendChild(b);
+}
+async function checkForUpdate(){
+  try{
+    const url=location.pathname.split('?')[0];
+    const r=await fetch(url+'?_v='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const txt=await r.text();
+    const m=txt.match(/id="app-version"[^>]*>v([\d.]+)</);
+    if(!m)return;
+    const remote=m[1],local=localVersion();
+    if(local&&cmpVer(remote,local)>0)showUpdateBanner(remote);
+  }catch(e){}
+}
+checkForUpdate();
+setInterval(checkForUpdate,5*60*1000);
+window.addEventListener('focus',checkForUpdate);
 </script>
 </body>
 </html>
