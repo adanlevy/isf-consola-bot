@@ -377,7 +377,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.79</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.80</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -701,6 +701,14 @@ const TEMPLATES=[
    label:'Confirmación de baja',
    marker:'retomando esta conversación queríamos confirmarte la baja',
    text:'Buenos días! Soy {operador} del Equipo de Socios, retomando esta conversación queríamos confirmarte la baja de tu donación. Te agradecemos el tiempo que estuviste acompañando nuestros proyectos y esperamos que pronto puedas volver a nuestra comunidad. Un cálido saludo.'},
+  {id:'t4',sid:'HXc6ab18e64e240f24fb56ad16f40a8bf2',
+   label:'Datos actualizados — confirmación',
+   marker:'te queríamos confirmar que quedó registrado correctamente',
+   text:'Hola {nombre},\nTe habla Valeria del Equipo de Socios de ISF-Ar. Vimos que actualizaste los datos para debitar tu donación y te queríamos confirmar que quedó registrado correctamente. Gracias por tu apoyo. Que tengas un hermoso día.'},
+  {id:'t5',sid:'HX355363ef668b93ccefe0d2fe71284bc7',
+   label:'Datos actualizados — consulta',
+   marker:'te queríamos comentar algo al respecto. Tendrás un segundo?',
+   text:'Hola {nombre},\nTe habla Valeria del Equipo de Socios de ISF-Ar. Vimos que actualizaste los datos para debitar tu donación , y te queríamos comentar algo al respecto. Tendrás un segundo?'},
 ];
 
 function getLastUsedTemplate(historial){
