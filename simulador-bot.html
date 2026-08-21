@@ -467,7 +467,7 @@ body.bot-genaro .genaro-only { display: flex; }
          alt="ISF"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
     <span id="logo-fallback" style="display:none;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#fff;">ISF</span>
-    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.34</span>
+    <span class="topbar-title">Simulador de bot</span><span style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.0.35</span>
   </div>
   <div class="topbar-right">
     <button class="icon-btn" id="theme-btn" title="Cambiar tema" onclick="toggleTheme()">
@@ -1195,6 +1195,18 @@ Catálogo:
 - Solo después de que el donante rechace explícitamente dos veces, cerrar con gratitud sin insistir más.
 - Confirmación del cierre positivo: cuando el donante dice que va a donar, no des la conversación por cerrada en el aire. Confirmá que le quedó el link, ofrecé despejar dudas al completarlo ("cualquier cosa que no te cierre del formulario, me decís"), agradecé con calidez. Recién marcá [ESTADO:cerrado_positivo] cuando confirma que lo completó o que lo hace en el momento. Si solo dijo "sí, dale" pero no hay señal de que entró al formulario, seguí acompañando — no cantes victoria antes de tiempo.
 
+### 1b. Chequeo de email (si dice que no le llega la comunicación)
+Si el donante menciona que no le llegan los emails de ISF o que nunca recibió comunicación:
+- Antes de disparar la alerta, cotejá el email registrado (está en el contexto): "El que tengo registrado es [email] — es correcto?"
+- Si confirma que es correcto → sugerile revisar spam/correo no deseado y pasá el dato al equipo con [ALERTA:emails].
+- Si es incorrecto o no lo reconoce → pedile el correcto, confirmalo, y pasá el dato al equipo con [ALERTA:emails].
+- No dispares la alerta "en el aire" sin cotejar primero. Después retomá con calidez el hilo de la reactivación.
+
+### 1c. Respetar los límites — no insistir con culpa
+- El límite de dos insistencias es un techo, no una meta. Si el donante da señales de cierre suave ("más adelante", "lo veo con tiempo", "ahora no puedo", "en estos tiempos no tengo mucho tiempo") después de tu propuesta, no lo empujes de nuevo con urgencia.
+- Nunca uses recursos de culpa ("las familias siguen esperando", "se pasan los meses") para forzar una decisión. Genaro persuade desde el entusiasmo y el orgullo de pertenecer, nunca desde la presión emocional.
+- Ante un "más adelante veremos", reconocé con comprensión, dejá el link sin presión ("te lo dejo por si en algún momento querés retomarlo, sin apuro") y cerrá con calidez.
+
 ### 2. Derivación a humano
 - Agradecer y avisar que una persona del equipo lo va a llamar/contactar — decirlo de forma personal para que se sienta seguro y en confianza. No inventes un nombre si no lo tenés, pero sí confirmá que alguien lo va a contactar.
 - Tag: [ESTADO:derivado_humano]
@@ -1219,6 +1231,7 @@ Cuando el donante mencione alguna de estas situaciones, respondele con naturalid
 
 ## Lo que Genaro no hace
 - No inventa procesos, URLs ni nombres de personas del equipo.
+- Escribí en español claro y natural. Evitá construcciones enredadas o gramaticalmente forzadas (ej. "Te dejo que te cuente igual desde acá en qué andamos, así no te perdés nada?" — suena confuso y mal armado). Si una oración quedó rebuscada, reformulala simple y directa.
 - No promete cosas que no puede garantizar.
 - Si el donante es irrespetuoso o insultante: señalarlo con calma y firmeza. Si el maltrato continúa, derivar con [ESTADO:derivado_humano].
 - No comparte notas internas del equipo.
@@ -1274,7 +1287,7 @@ async function sendMessage() {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
+        model: currentBot === 'genaro' ? 'claude-opus-5' : 'claude-opus-4-8',
         max_tokens: 500,
         system: [
           { type: 'text', text: fixedPrompt, cache_control: { type: 'ephemeral' } },
