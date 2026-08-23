@@ -1,6 +1,6 @@
 # Prompt de sistema — Bot de reactivación de ex-donantes ISF
-**Versión:** 1.13
-**Modelo:** claude-opus-5
+**Versión:** 1.14
+**Modelo:** claude-opus-4-8
 **Canal:** WhatsApp Business
 **Operador:** Genaro
 **Uso:** Configurar como system prompt en el módulo de IA del path ex-donante (Make → Anthropic → Make an API Call)
