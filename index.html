@@ -382,7 +382,7 @@ body[data-view="reactivacion"] .view-switch{background:rgba(15,118,110,0.12)}
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.82</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.83</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -681,13 +681,13 @@ function pillInfo(d){
   if(d.estado==='bienvenida')return['pec','ti-heart-handshake','Bienvenida enviada'];
   if(d.estado==='derivado_humano')return['ph','ti-user','Con humano'];
   if(d.estado==='cerrado_positivo')return['pp','ti-check','Cerrado positivo — chequear'];
-  if(d.estado==='cerrado_negativo')return['pn','ti-x','Cerrado negativo'];
+  if(isNeg(d))return['pn','ti-x','Cerrado negativo'];
   if(d.estado==='en_conversacion')return['pec','ti-message-chatbot','Bot conversando'];
   if(d.estado==='primer_envio')return['pec','ti-send','Primer contacto'];
   if(!d.estado&&d.liberar_en)return['pr','ti-calendar','Programada'];
   return['ph','ti-circle','Activo'];
 }
-function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo')return'bn';if(e==='en_conversacion'||e==='primer_envio')return'bec';return'br'}
+function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo'||e===NEG_REACT)return'bn';if(e==='en_conversacion'||e==='primer_envio')return'bec';return'br'}
 function botStatusBadge(d){
   const botName=viewMode==='reactivacion'?'Genaro':'Maitena';
   if(d.estado==='derivado_humano')return['bot-off','ti-robot-off',botName+' desactivada'];
@@ -762,7 +762,7 @@ function goBack(){
   document.getElementById('conv')?.classList.remove('visible');
 }
 function switchToTab(t){
-  const tabMap={'derivado_humano':0,'cerrado_negativo':1,'cerrado_positivo':2,'en_conversacion':3,'programadas':4,'primer_envio':5,'reactivacion':5};
+  const tabMap={'derivado_humano':0,'cerrado_negativo':1,[NEG_REACT]:1,'cerrado_positivo':2,'en_conversacion':3,'programadas':4,'primer_envio':5,'reactivacion':5};
   const idx=tabMap[t];if(idx===undefined)return;
   const tabEls=document.querySelectorAll('#tabs-main .tab');
   if(!tabEls[idx])return;
@@ -778,7 +778,7 @@ function renderTabTags(){
 }
 function updateCounts(d){
   document.getElementById('cnt-h').textContent=d.filter(x=>x.estado==='derivado_humano').length;
-  document.getElementById('cnt-n').textContent=d.filter(x=>x.estado==='cerrado_negativo').length;
+  document.getElementById('cnt-n').textContent=d.filter(isNeg).length;
   document.getElementById('cnt-p').textContent=d.filter(x=>x.estado==='cerrado_positivo').length;
   const ecEl=document.getElementById('cnt-ec');if(ecEl)ecEl.textContent=d.filter(x=>x.estado==='en_conversacion').length;
   const prEl=document.getElementById('cnt-pr');if(prEl)prEl.textContent=d.filter(x=>x.liberar_en&&!x.estado).length;
@@ -816,6 +816,7 @@ function renderList(){
   } else {
     base=tab==='programadas'?scoped.filter(d=>d.liberar_en&&!d.estado):
          tab==='primer_envio'?scoped.filter(d=>d.estado==='primer_envio'||d.estado==='reactivacion'||bienvenidaActiva(d)):
+         tab==='cerrado_negativo'?scoped.filter(isNeg):
          scoped.filter(d=>d.estado===tab);
   }
   const filtered=[...base].sort((a,b)=>{
@@ -896,6 +897,10 @@ function bienvenidaActiva(d){
   if(!d.fecha_bienvenida)return true; // sin fecha → mostrarla por las dudas
   return (Date.now()-new Date(d.fecha_bienvenida).getTime())/86400000 <= 30;
 }
+// Genaro graba su cierre negativo como 'reactivacion_cerrada_negativa' (Make traduce el tag).
+// Los registros viejos pueden seguir en 'cerrado_negativo': se tratan igual.
+const NEG_REACT='reactivacion_cerrada_negativa';
+function isNeg(d){return d.estado==='cerrado_negativo'||d.estado===NEG_REACT;}
 // Para el badge: está en su primer mes según la fecha de bienvenida, sin importar el estado.
 function enPrimerMes(d){
   if(!d.fecha_bienvenida)return false;
@@ -956,8 +961,8 @@ function actionsHtml(){
     ${sel.estado!=='derivado_humano'?`<button class="btn btn-blue" onclick="doTake()"><i class="ti ti-user-plus" style="font-size:11px"></i> Tomar</button>`:''}
     <button class="btn btn-default" onclick="doLiberate()"><i class="ti ti-calendar-plus" style="font-size:11px"></i> Liberar</button>
     ${sel.estado!=='cerrado_positivo'?`<button class="btn btn-green" onclick="doResolve('cerrado_positivo')"><i class="ti ti-check" style="font-size:11px"></i> Positivo</button>`:''}
-    ${sel.estado!=='cerrado_negativo'?`<button class="btn btn-red" onclick="doResolve('cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Negativo</button>`:''}
-    ${sel.estado==='cerrado_negativo'?`<button style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:11px;font-weight:500;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;background:#009DDC;color:#fff;transition:background 0.12s" onmouseover="this.style.background='#007BB0'" onmouseout="this.style.background='#009DDC'" onclick="openBajaModal()"><svg width="14" height="10" viewBox="0 0 24 17" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C11.1 2 12.1 2.4 12.9 3.1C13.6 1.3 15.4 0 17.5 0C20 0 22 2 22 4.5C22 4.8 22 5.1 21.9 5.4C23.1 6.1 24 7.4 24 8.9C24 11.2 22.1 13 19.8 13H4.5C2 13 0 11 0 8.5C0 6.3 1.5 4.4 3.6 3.9C3.5 3.6 3.5 3.3 3.5 3C3.5 1.3 4.8 0 6.5 0C7.8 0 8.9 0.8 10 2Z"/></svg> Dar de baja en SF</button>`:''}`;
+    ${!isNeg(sel)?`<button class="btn btn-red" onclick="doResolve(viewMode==='reactivacion'?NEG_REACT:'cerrado_negativo')"><i class="ti ti-x" style="font-size:11px"></i> Negativo</button>`:''}
+    ${isNeg(sel)?`<button style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:11px;font-weight:500;border-radius:var(--r);border:none;cursor:pointer;font-family:inherit;background:#009DDC;color:#fff;transition:background 0.12s" onmouseover="this.style.background='#007BB0'" onmouseout="this.style.background='#009DDC'" onclick="openBajaModal()"><svg width="14" height="10" viewBox="0 0 24 17" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C11.1 2 12.1 2.4 12.9 3.1C13.6 1.3 15.4 0 17.5 0C20 0 22 2 22 4.5C22 4.8 22 5.1 21.9 5.4C23.1 6.1 24 7.4 24 8.9C24 11.2 22.1 13 19.8 13H4.5C2 13 0 11 0 8.5C0 6.3 1.5 4.4 3.6 3.9C3.5 3.6 3.5 3.3 3.5 3C3.5 1.3 4.8 0 6.5 0C7.8 0 8.9 0.8 10 2Z"/></svg> Dar de baja en SF</button>`:''}`;
 }
 
 function inputAreaHtml(){
@@ -1287,7 +1292,7 @@ async function doResolve(res){
   if(!sel)return;const c=cfg();
   if(c.wr){try{await fetch(c.wr,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({donationId:sel.id,resolution:res})})}catch(e){}}
   sel.estado=res;donors=donors.map(d=>d.id===sel.id?sel:d);
-  updateCounts(scopedDonors());switchToTab(res);
+  updateCounts(scopedDonors());switchToTab(res===NEG_REACT?'cerrado_negativo':res);
   const msgs=parseHist(sel.historial);renderConv(sel,msgs);
 }
 
@@ -1403,10 +1408,10 @@ function showNotif(donor){
   popup.className='notif-popup';popup.id='notif-'+donor.id;
   popup.innerHTML=`<div class="notif-header"><div class="notif-name"><i class="ti ti-message-circle" style="font-size:14px;color:var(--isf)"></i> ${donor.name}</div><button class="notif-close" onclick="event.stopPropagation();this.closest('.notif-popup').remove()">×</button></div><div class="notif-preview">${preview}</div>`;
   popup.onclick=()=>{
-    const tabMap={'derivado_humano':0,'cerrado_negativo':1,'cerrado_positivo':2,'en_conversacion':3,'primer_envio':5};
+    const tabMap={'derivado_humano':0,'cerrado_negativo':1,[NEG_REACT]:1,'cerrado_positivo':2,'en_conversacion':3,'primer_envio':5};
     const idx=tabMap[donor.estado]??4;
     const tabEls=document.querySelectorAll('.tab');
-    if(tabEls[idx]){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tabEls[idx].classList.add('active');tab=donor.estado||'programadas';}
+    if(tabEls[idx]){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tabEls[idx].classList.add('active');tab=(isNeg(donor)?'cerrado_negativo':donor.estado)||'programadas';}
     renderList();selectDonor(donor.id);popup.remove();
   };
   c.appendChild(popup);

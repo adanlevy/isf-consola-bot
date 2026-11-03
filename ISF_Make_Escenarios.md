@@ -271,6 +271,13 @@ Tu apoyo durante este tiempo fue muy valioso para las comunidades con las que tr
 - `WhatsApp_FechaInicioEpisodio__c` — base para calcular los +7 días y el cooldown de 6 meses.
 - `WhatsApp_UltimoEnvio__c` — anti-duplicado (umbral de 8 días, no 4 como rechazos).
 
+### Estado de cierre negativo propio: `reactivacion_cerrada_negativa`
+Para distinguir el "no" de un ex-donante (Genaro) del "no" en un rechazo (Maitena):
+- **Prompt sin cambios:** Genaro sigue emitiendo `[ESTADO:cerrado_negativo]`, así que la limpieza de tags del mensaje de Twilio no cambia.
+- **Inbound (escenario 1), camino Genaro, módulo que actualiza SF:** cuando el tag es `cerrado_negativo`, se graba `WhatsApp_Estado__c = 'reactivacion_cerrada_negativa'`. Maitena sigue grabando `cerrado_negativo`.
+- **SOQL del webhook `wl`:** incluye `'reactivacion_cerrada_negativa'` en el `IN`, si no esas conversaciones no aparecen en la consola.
+- **Consola:** en la vista Reactivación, la pestaña Negativo muestra `reactivacion_cerrada_negativa` y también los `cerrado_negativo` viejos de Genaro. El botón "Negativo" del operador manda `reactivacion_cerrada_negativa` en Reactivación y `cerrado_negativo` en Rechazos (el `wr` graba el valor que recibe).
+
 ### SOQL en producción (módulo 1)
 Es una versión simplificada del diseño completo de más abajo:
 ```sql
@@ -289,6 +296,7 @@ WHERE
   Estado_Donante__c = 'Ex-Donante'
   AND Fecha_de_baja__c <= 2024-12-31
   AND npe03__Contact__r.MobilePhone != null
+  AND WhatsApp_Estado__c != 'reactivacion_cerrada_negativa'
   AND (
     WhatsApp_Estado__c != 'reactivacion'
     OR WhatsApp_Intentos__c = null
@@ -297,6 +305,7 @@ WHERE
 ORDER BY Fecha_de_baja__c DESC NULLS LAST
 LIMIT 199
 ```
+- **`!= 'reactivacion_cerrada_negativa'`**: no volver a escribirle a quien ya le dijo que no a Genaro. Antes de este cambio, la condición de reactivación dejaba pasar a los `cerrado_negativo`.
 - **`Estado_Donante__c = 'Ex-Donante'`**: se agregó porque `Fecha_de_baja__c` mira solo esa donación. Sin este filtro, alguien con una donación vieja dada de baja y otra nueva activa entraba como ex-donante.
 - **`Fecha_de_baja__c <= 2024-12-31`**: solo bajas anteriores a 2025.
 - **Condición de reactivación**: no entra quien ya está en un episodio `reactivacion` con al menos un intento enviado.
