@@ -127,7 +127,8 @@ SELECT Id, ISFAR_Id_18_digitos__c,
        Estado_ltima_op_Cerrada__c,
        WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
        WhatsApp_Liberar_En__c, WhatsApp_Historial__c,
-       WhatsApp_Historial_Archivo__c
+       WhatsApp_Historial_Archivo__c,
+       N_mero_de_oport_NO_COBR_en_ltim_5_meses__c
 FROM npe03__Recurring_Donation__c
 WHERE
   Estado_Donante__c = 'Rechazada'
@@ -141,8 +142,13 @@ WHERE
   AND npe03__Contact__r.MobilePhone != null
   AND (Reactivacion__c = null OR Reactivacion__c != 'Reactivado')
   AND (WhatsApp_Liberar_En__c = null OR WhatsApp_Liberar_En__c <= TODAY)
-  AND npe03__Date_Established__c < THIS_MONTH
-  {{if(formatDate(now; "D") >= 12; ""; "AND (npe03__Last_Payment_Date__c = null OR npe03__Last_Payment_Date__c < " + formatDate(addMonths(setDate(now; 1); -2); "YYYY-MM-DD") + ")")}}
+  AND (
+    npe03__Last_Payment_Date__c < {{formatDate(addMonths(setDate(now; 1); -2); "YYYY-MM-DD")}}
+    OR (
+      npe03__Last_Payment_Date__c = null
+      AND N_mero_de_oport_NO_COBR_en_ltim_5_meses__c >= 2
+    )
+  )
   AND (WhatsApp_UltimoEnvio__c = null OR WhatsApp_UltimoEnvio__c < {{formatDate(addDays(now; -4); "YYYY-MM-DD")}}T00:00:00.000Z)
   AND (
     WhatsApp_FechaInicioEpisodio__c = null
@@ -166,14 +172,14 @@ WHERE
 - **`!= 'en_conversacion'`** — Excluido porque si el bot está en conversación activa, no tiene sentido interrumpir con un template outbound.
 - **`Reactivacion__c != 'Reactivado'`** — Evita contactar a donantes que ya actualizaron sus datos aunque el rechazo no se haya resuelto en SF aún.
 - **`WhatsApp_Liberar_En__c <= TODAY`** — Cuando el operador "libera un episodio" setea esta fecha para pausar el outbound. El SOQL solo incluye registros cuya fecha ya pasó.
-- **`Date_Established__c < THIS_MONTH`** — Excluye donaciones dadas de alta el mes en curso; aún no tuvieron un ciclo de cobro completo.
 - **`WhatsApp_UltimoEnvio__c < 4 días`** — Previene envíos duplicados. Movido al SOQL desde el filtro F4 para reducir iteraciones.
 - **Condición `effective_intentos` en SOQL** — Pre-filtra registros que no pasarían F3, reduciendo iteraciones:
   - `FechaInicioEpisodio = null` → episodio nuevo, siempre pasa
   - `Intentos < 3 AND FechaInicioEpisodio >= 1ro del mes` → episodio en curso este mes con intentos disponibles
   - `FechaInicio < 1ro del mes actual AND < 12 días atrás` → mes diferente + tiempo suficiente, se trata como nuevo episodio
   - Un episodio de un mes anterior con `Intentos < 3` NO entra por la segunda rama; solo entra si además cumple la tercera (12 días), en cuyo caso se resetea el contador.
-- **Condición `Last_Payment_Date`** — Si hoy es día ≥ 12: entran todos. Si es día < 12: excluye cobros del mes pasado y hace 2 meses (solo procesa cobros de hace 3+ meses o sin fecha). Umbral de 2 meses: `addMonths(setDate(now; 1); -2)` = primer día de hace 2 meses.
+- **Regla "2 meses sin cobro" (todo el mes)** — Entra quien lleva 2+ meses sin cobro **sin contar el mes en curso**: último pago anterior al primer día de (mes − 2) (`addMonths(setDate(now; 1); -2)`), o nunca cobró y tiene `N_mero_de_oport_NO_COBR_en_ltim_5_meses__c >= 2`. Se eliminó el condicional del día 12 (antes, desde el día 12 entraban todos los rechazos). La rama del null con oportunidades ≥ 2 cubre el caso de altas recientes (ej. asociado el 27/6, primer cobro en julio) que con aritmética de fechas se colaban con un solo mes sin cobro. `Date_Established__c < THIS_MONTH` se quitó porque quedó redundante: un alta del mes no puede cumplir ninguna de las dos ramas.
+- **Complemento con el callcenter** — La vista de lista de SF del callcenter usa `Last Donation Date >= 2 MONTHS AGO` (en los informes de SF, "2 MONTHS AGO" ancla en el primer día de ese mes), que es exactamente el complemento de esta regla: Maitena toma los de 2+ meses, el callcenter los recientes, sin hueco ni doble contacto en el borde.
 
 ### effective_intentos (módulo 3 — Set Variable)
 ```
@@ -265,7 +271,38 @@ Tu apoyo durante este tiempo fue muy valioso para las comunidades con las que tr
 - `WhatsApp_FechaInicioEpisodio__c` — base para calcular los +7 días y el cooldown de 6 meses.
 - `WhatsApp_UltimoEnvio__c` — anti-duplicado (umbral de 8 días, no 4 como rechazos).
 
-### SOQL Outbound (módulo 1)
+### SOQL en producción (módulo 1)
+Es una versión simplificada del diseño completo de más abajo:
+```sql
+SELECT Id, ISFAR_Id_18_digitos__c,
+       npe03__Contact__r.FirstName, npe03__Contact__r.MobilePhone,
+       npe03__Amount__c, Medio_de_pago__c,
+       Estado_Donante__c, npe03__Last_Payment_Date__c,
+       Reactivacion__c, WhatsApp_Estado__c, WhatsApp_Intentos__c,
+       Estado_ltima_op_Cerrada__c,
+       WhatsApp_UltimoEnvio__c, WhatsApp_FechaInicioEpisodio__c,
+       WhatsApp_Liberar_En__c, WhatsApp_Historial__c,
+       WhatsApp_Historial_Archivo__c,
+       Fecha_de_baja__c
+FROM npe03__Recurring_Donation__c
+WHERE
+  Estado_Donante__c = 'Ex-Donante'
+  AND Fecha_de_baja__c <= 2024-12-31
+  AND npe03__Contact__r.MobilePhone != null
+  AND (
+    WhatsApp_Estado__c != 'reactivacion'
+    OR WhatsApp_Intentos__c = null
+    OR WhatsApp_Intentos__c <= 0
+  )
+ORDER BY Fecha_de_baja__c DESC NULLS LAST
+LIMIT 199
+```
+- **`Estado_Donante__c = 'Ex-Donante'`**: se agregó porque `Fecha_de_baja__c` mira solo esa donación. Sin este filtro, alguien con una donación vieja dada de baja y otra nueva activa entraba como ex-donante.
+- **`Fecha_de_baja__c <= 2024-12-31`**: solo bajas anteriores a 2025.
+- **Condición de reactivación**: no entra quien ya está en un episodio `reactivacion` con al menos un intento enviado.
+- **Orden**: de la baja más reciente (hasta fines de 2024) a la más antigua. Tope de 199 por corrida.
+
+### Diseño completo (referencia)
 ```sql
 SELECT Id, ISFAR_Id_18_digitos__c,
        npe03__Contact__r.FirstName, npe03__Contact__r.LastName,
