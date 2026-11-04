@@ -294,6 +294,7 @@ SELECT Id, ISFAR_Id_18_digitos__c,
 FROM npe03__Recurring_Donation__c
 WHERE
   Estado_Donante__c = 'Ex-Donante'
+  AND npe03__Contact__r.Whatsapp_Error__c = false
   AND Fecha_de_baja__c <= 2024-12-31
   AND npe03__Contact__r.MobilePhone != null
   AND WhatsApp_Estado__c != 'reactivacion_cerrada_negativa'
@@ -303,13 +304,15 @@ WHERE
     OR WhatsApp_Intentos__c <= 0
   )
 ORDER BY Fecha_de_baja__c DESC NULLS LAST
-LIMIT 199
+LIMIT 200
 ```
 - **`!= 'reactivacion_cerrada_negativa'`**: no volver a escribirle a quien ya le dijo que no a Genaro. Antes de este cambio, la condición de reactivación dejaba pasar a los `cerrado_negativo`.
 - **`Estado_Donante__c = 'Ex-Donante'`**: se agregó porque `Fecha_de_baja__c` mira solo esa donación. Sin este filtro, alguien con una donación vieja dada de baja y otra nueva activa entraba como ex-donante.
 - **`Fecha_de_baja__c <= 2024-12-31`**: solo bajas anteriores a 2025.
 - **Condición de reactivación**: no entra quien ya está en un episodio `reactivacion` con al menos un intento enviado.
-- **Orden**: de la baja más reciente (hasta fines de 2024) a la más antigua. Tope de 199 por corrida.
+- **`Whatsapp_Error__c = false`**: no escribirle a números donde WhatsApp ya falló.
+- **Orden**: de la baja más reciente (hasta fines de 2024) a la más antigua. Tope de 200 por corrida.
+- **Migración:** los `cerrado_negativo` viejos de Genaro se migraron a `reactivacion_cerrada_negativa`.
 
 ### Diseño completo (referencia)
 ```sql
