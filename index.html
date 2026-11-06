@@ -382,7 +382,7 @@ body[data-view="reactivacion"] .view-switch{background:rgba(15,118,110,0.12)}
     <div class="topbar-logo-fallback" id="logo-fallback" style="display:none">
       <i class="ti ti-bolt" style="font-size:18px"></i> ISF-Bot
     </div>
-    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.83</span>
+    <span class="brand-title" style="color:rgba(255,255,255,0.7);font-size:13px;margin-left:4px">· Gestión de donantes</span><span id="app-version" style="color:rgba(255,255,255,0.5);font-size:10px;margin-left:5px">v1.84</span>
   </div>
   <div class="topbar-right">
     <span class="poll-dot" id="poll-dot" title="Estado conexión"></span>
@@ -641,13 +641,26 @@ function parseHist(s){
     const m=l.match(/^\[([^\]]+)\]\s+([^:]+):\s+(.+)$/s);
     if(m){
       const sender=m[2].trim().toUpperCase();
-      const type=['MAITENA','GENARO'].includes(sender)?'bot':sender==='DONANTE'?'donor':'human';
+      const type=['MAITENA','GENARO','LUCERO'].includes(sender)?'bot':sender==='DONANTE'?'donor':'human';
       result.push({time:m[1].trim(),sender:m[2].trim(),type,text:m[3].trim()});
     } else if(result.length>0){
       result[result.length-1].text+='\n'+l;
     }
   }
   return result;
+}
+// Bot que lleva la conversación: el autor del último mensaje de bot en el historial.
+// Si todavía no hay mensajes de bot, se deduce por el tipo de donación.
+function currentBot(d){
+  const msgs=parseHist(d&&d.historial);
+  for(let i=msgs.length-1;i>=0;i--){
+    if(msgs[i].type==='bot'){const s=msgs[i].sender.toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1);}
+  }
+  return d&&d.open_status==='Closed'?'Genaro':'Maitena';
+}
+function botEstado(name,activo){
+  const fem=name==='Maitena';
+  return name+' '+(activo?(fem?'activa':'activo'):(fem?'desactivada':'desactivado'));
 }
 function nowStr(){const n=new Date();return`${n.getDate().toString().padStart(2,'0')}/${(n.getMonth()+1).toString().padStart(2,'0')} ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`}
 function isWindowExpired(historial){
@@ -689,9 +702,9 @@ function pillInfo(d){
 }
 function badgeClass(e){if(e==='derivado_humano')return'bh';if(e==='cerrado_positivo')return'bp';if(e==='cerrado_negativo'||e===NEG_REACT)return'bn';if(e==='en_conversacion'||e==='primer_envio')return'bec';return'br'}
 function botStatusBadge(d){
-  const botName=viewMode==='reactivacion'?'Genaro':'Maitena';
-  if(d.estado==='derivado_humano')return['bot-off','ti-robot-off',botName+' desactivada'];
-  return['bot-on','ti-robot',botName+' activa'];
+  const botName=currentBot(d);
+  if(d.estado==='derivado_humano')return['bot-off','ti-robot-off',botEstado(botName,false)];
+  return['bot-on','ti-robot',botEstado(botName,true)];
 }
 
 const TEMPLATES=[
@@ -773,7 +786,9 @@ function switchToTab(t){
 function renderTabTags(){
   const el=document.getElementById('tab-tags');if(!el)return;
   const tags=TAB_TAGS[tab]||[];
-  el.innerHTML=tags.map(([cls,icon,lbl])=>`<span class="badge ${cls}"><i class="ti ${icon}" style="font-size:9px"></i> ${lbl}</span>`).join('');
+  // En Reactivación el bot de la vista es Genaro
+  const fix=lbl=>viewMode!=='reactivacion'?lbl:lbl==='Maitena activa'?botEstado('Genaro',true):lbl==='Maitena desactivada'?botEstado('Genaro',false):lbl;
+  el.innerHTML=tags.map(([cls,icon,lbl])=>`<span class="badge ${cls}"><i class="ti ${icon}" style="font-size:9px"></i> ${fix(lbl)}</span>`).join('');
   el.style.display=tags.length?'flex':'none';
 }
 function updateCounts(d){
@@ -967,8 +982,8 @@ function actionsHtml(){
 
 function inputAreaHtml(){
   const fbBtn=`<button id="fb-toggle-btn" onclick="toggleConvFeedback()" title="Feedback" style="width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:color 0.15s"><i class="ti ti-message-dots"></i></button>`;
-  if(sel.estado==='en_conversacion'||sel.estado==='primer_envio')
-    return`<div class="input-area"><div style="display:flex;align-items:center;gap:6px">${fbBtn}<div class="waiting-reply" style="flex:1"><i class="ti ti-robot" style="font-size:15px;flex-shrink:0;color:var(--isf)"></i> Maitena está manejando esta conversación. Podés tomar el control si es necesario.</div></div></div>`;
+  if(['en_conversacion','primer_envio','reactivacion','bienvenida'].includes(sel.estado))
+    return`<div class="input-area"><div style="display:flex;align-items:center;gap:6px">${fbBtn}<div class="waiting-reply" style="flex:1"><i class="ti ti-robot" style="font-size:15px;flex-shrink:0;color:var(--isf)"></i> ${currentBot(sel)} está manejando esta conversación. Podés tomar el control si es necesario.</div></div></div>`;
   const canChat=sel.estado==='derivado_humano';
   if(!canChat)return`<div class="input-area" style="display:flex;align-items:center">${fbBtn}</div>`;
   const expired=isWindowExpired(sel.historial);
@@ -1330,8 +1345,7 @@ async function sendConvFeedback(btn){
   }
   btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:12px"></i> Enviando...';
   const hist=sel?parseHist(sel.historial):[];
-  const botName=sel&&sel.open_status==='Closed'?'GENARO':'MAITENA';
-  const conversation=hist.map(m=>`[${m.type==='donor'?'DONANTE':m.type==='bot'?botName:'HUMANO'}] ${m.text}`).join('\n');
+  const conversation=hist.map(m=>`[${m.type==='donor'?'DONANTE':m.type==='bot'?m.sender.toUpperCase():'HUMANO'}] ${m.text}`).join('\n');
   const payload={comment,donorName:sel?.name||'',donorPhone:sel?.phone||'',estado:sel?.estado||'',conversation};
   try{
     await fetch(c.wfb,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
